@@ -31,11 +31,9 @@ export const leagueService = {
   },
 
   async createLeague(params: CreateLeagueParams): Promise<League> {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
     const { data, error } = await supabase
       .from('leagues')
-      .insert({ ...params, created_by: user.id })
+      .insert(params)
       .select('id, name, sport, visibility, lat, lng')
       .single()
     if (error) throw error

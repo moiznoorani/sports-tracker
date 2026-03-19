@@ -70,16 +70,13 @@ public final class LeagueService: LeagueServiceProtocol {
             let visibility: String
             let lat: Double?
             let lng: Double?
-            let created_by: String
         }
-        let user = try await client.auth.user()
         let insert = Insert(
             name: name,
             sport: sport.rawValue,
             visibility: visibility.rawValue,
             lat: lat,
-            lng: lng,
-            created_by: user.id.uuidString.lowercased()
+            lng: lng
         )
         return try await client.from("leagues")
             .insert(insert)
