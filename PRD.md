@@ -1,5 +1,11 @@
 # PRD: Sports Tracker — V1
 
+## Implementation Progress
+
+| Issue | Title | Status |
+|-------|-------|--------|
+| #3 | Phase 1 [Auth]: Email/password sign up, sign in, sign out, password reset | Closed |
+
 ## Problem Statement
 
 Recreational and competitive sports leagues — particularly Ultimate Frisbee and Basketball — lack a single, cohesive tool that handles the full lifecycle of running a league: organizing tournaments, forming teams through a live draft, tracking player stats in real time during games, and giving players a persistent career profile they can carry across leagues. Organizers currently stitch together spreadsheets, group chats, and generic bracket tools. Players have no way to track their history. Spectators have no engagement surface. This app solves all three problems in one place, optimized for iPadOS on the sideline and fully accessible via web for users without an iPad.
