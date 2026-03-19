@@ -12,7 +12,7 @@ public final class ProfileViewModel {
     private let service: ProfileServiceProtocol
     private var userId: String = ""
 
-    public init(service: ProfileServiceProtocol) {
+    public init(service: ProfileServiceProtocol = ProfileService(client: .shared)) {
         self.service = service
     }
 

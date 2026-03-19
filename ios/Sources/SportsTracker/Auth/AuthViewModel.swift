@@ -3,23 +3,23 @@ import Supabase
 
 @MainActor
 @Observable
-final class AuthViewModel {
-    enum State {
+public final class AuthViewModel {
+    public enum State {
         case loading
         case unauthenticated
         case authenticated(Session)
     }
 
-    private(set) var state: State = .loading
-    private(set) var errorMessage: String?
+    public private(set) var state: State = .loading
+    public private(set) var errorMessage: String?
 
     private let service: any AuthServiceProtocol
 
-    init(service: any AuthServiceProtocol = AuthService()) {
+    public init(service: any AuthServiceProtocol = AuthService()) {
         self.service = service
     }
 
-    var isAuthenticated: Bool {
+    public var isAuthenticated: Bool {
         if case .authenticated = state { return true }
         return false
     }

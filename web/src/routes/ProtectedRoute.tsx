@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { NavBar } from '../components/NavBar'
 
 export function ProtectedRoute() {
   const { session, loading } = useAuth()
@@ -11,5 +12,10 @@ export function ProtectedRoute() {
     return <Navigate to="/auth/sign-in" state={{ from: location }} replace />
   }
 
-  return <Outlet />
+  return (
+    <>
+      <NavBar />
+      <Outlet />
+    </>
+  )
 }
