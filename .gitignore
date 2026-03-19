@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Xcode build artifacts
+SportsTrackerApp/build/
+SportsTrackerApp/**/*.xcuserstate
+SportsTrackerApp/**/xcuserdata/
+SportsTrackerApp/**/.swiftpm/
+
+# Swift Package Manager
+ios/.build/
+ios/.swiftpm/
+
+# Xcode user-specific
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Web
+web/.env
+web/node_modules/
+web/dist/
+
+# Claude Code
+.claude/
