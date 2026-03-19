@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export function SignInPage() {
-  const { signIn } = useAuth()
+  const { signIn, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: Location })?.from?.pathname ?? '/'
@@ -62,6 +62,10 @@ export function SignInPage() {
         </button>
       </form>
       <p><Link to="/auth/reset-password">Forgot password?</Link></p>
+      <hr />
+      <button type="button" onClick={() => signInWithGoogle()}>
+        Sign in with Google
+      </button>
       <p>No account? <Link to="/auth/sign-up">Create one</Link></p>
     </div>
   )

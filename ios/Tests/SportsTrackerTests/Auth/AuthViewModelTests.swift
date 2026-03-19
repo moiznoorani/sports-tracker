@@ -213,6 +213,54 @@ struct AuthViewModelTests {
         #expect(vm.errorMessage != nil)
     }
 
+    // MARK: - signInWithApple
+
+    @Test func signInWithApple_callsServiceWithTokenAndNonce() async {
+        let mock = MockAuthService()
+        let vm = AuthViewModel(service: mock)
+
+        await vm.signInWithApple(idToken: "apple-id-token", nonce: "random-nonce")
+
+        #expect(mock.signInWithAppleCalled == true)
+        #expect(mock.lastIdToken == "apple-id-token")
+        #expect(mock.lastNonce == "random-nonce")
+    }
+
+    @Test func signInWithApple_setsAuthenticatedStateOnSuccess() async {
+        let mock = MockAuthService()
+        mock.stubbedSession = makeSession()
+        let vm = AuthViewModel(service: mock)
+
+        await vm.signInWithApple(idToken: "apple-id-token", nonce: "random-nonce")
+
+        if case .authenticated = vm.state { } else {
+            Issue.record("Expected .authenticated after Apple sign in")
+        }
+    }
+
+    @Test func signInWithApple_setsErrorMessageOnFailure() async {
+        let mock = MockAuthService()
+        mock.shouldThrow = AuthError(message: "Invalid Apple token")
+        let vm = AuthViewModel(service: mock)
+
+        await vm.signInWithApple(idToken: "bad-token", nonce: "nonce")
+
+        #expect(vm.errorMessage != nil)
+    }
+
+    @Test func signInWithApple_clearsErrorMessageBeforeAttempt() async {
+        let mock = MockAuthService()
+        mock.shouldThrow = AuthError(message: "prior error")
+        let vm = AuthViewModel(service: mock)
+        await vm.signInWithApple(idToken: "t", nonce: "n")
+
+        mock.shouldThrow = nil
+        mock.stubbedSession = makeSession()
+        await vm.signInWithApple(idToken: "t", nonce: "n")
+
+        #expect(vm.errorMessage == nil)
+    }
+
     // MARK: - unauthenticated requests blocked
 
     @Test func isAuthenticated_falseWhenUnauthenticated() async {

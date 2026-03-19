@@ -44,6 +44,16 @@ final class AuthViewModel {
         }
     }
 
+    func signInWithApple(idToken: String, nonce: String) async {
+        errorMessage = nil
+        do {
+            try await service.signInWithApple(idToken: idToken, nonce: nonce)
+            await loadSession()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func signIn(email: String, password: String) async {
         errorMessage = nil
         do {

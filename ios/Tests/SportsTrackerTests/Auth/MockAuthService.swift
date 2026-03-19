@@ -7,12 +7,15 @@ final class MockAuthService: AuthServiceProtocol, @unchecked Sendable {
 
     var signUpCalled = false
     var signInCalled = false
+    var signInWithAppleCalled = false
     var signOutCalled = false
     var resetPasswordCalled = false
     var updatePasswordCalled = false
 
     var lastEmail: String?
     var lastPassword: String?
+    var lastIdToken: String?
+    var lastNonce: String?
 
     var currentSession: Session? {
         get async { stubbedSession }
@@ -29,6 +32,13 @@ final class MockAuthService: AuthServiceProtocol, @unchecked Sendable {
         signInCalled = true
         lastEmail = email
         lastPassword = password
+        if let error = shouldThrow { throw error }
+    }
+
+    func signInWithApple(idToken: String, nonce: String) async throws {
+        signInWithAppleCalled = true
+        lastIdToken = idToken
+        lastNonce = nonce
         if let error = shouldThrow { throw error }
     }
 

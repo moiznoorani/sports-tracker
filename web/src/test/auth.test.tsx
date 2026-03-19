@@ -18,6 +18,7 @@ function makeAuthContext(overrides = {}) {
     loading: false,
     signUp: vi.fn().mockResolvedValue({ error: null }),
     signIn: vi.fn().mockResolvedValue({ error: null }),
+    signInWithGoogle: vi.fn().mockResolvedValue({ error: null }),
     signOut: vi.fn().mockResolvedValue({ error: null }),
     resetPassword: vi.fn().mockResolvedValue({ error: null }),
     updatePassword: vi.fn().mockResolvedValue({ error: null }),
@@ -96,7 +97,7 @@ describe('SignInPage', () => {
 
     await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com')
     await userEvent.type(screen.getByLabelText(/password/i), 'password123')
-    await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
 
     await waitFor(() => {
       expect(ctx.signIn).toHaveBeenCalledWith('user@example.com', 'password123')
@@ -117,7 +118,7 @@ describe('SignInPage', () => {
 
     await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com')
     await userEvent.type(screen.getByLabelText(/password/i), 'password123')
-    await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Invalid credentials')
@@ -137,7 +138,7 @@ describe('SignInPage', () => {
 
     await userEvent.type(screen.getByLabelText(/email/i), 'user@example.com')
     await userEvent.type(screen.getByLabelText(/password/i), 'password123')
-    await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
 
     await waitFor(() => {
       expect(screen.getByText('Home')).toBeInTheDocument()
@@ -282,5 +283,61 @@ describe('ProtectedRoute', () => {
       </AuthContext.Provider>
     )
     expect(container).toBeEmptyDOMElement()
+  })
+})
+
+// ── Google OAuth ──────────────────────────────────────────────────────────────
+
+describe('Google OAuth', () => {
+  it('SignInPage shows a Sign in with Google button', () => {
+    renderWithAuth(
+      <Routes>
+        <Route path="/auth/sign-in" element={<SignInPage />} />
+      </Routes>,
+      makeAuthContext(),
+      '/auth/sign-in'
+    )
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument()
+  })
+
+  it('SignInPage Google button calls signInWithGoogle', async () => {
+    const ctx = makeAuthContext()
+    renderWithAuth(
+      <Routes>
+        <Route path="/auth/sign-in" element={<SignInPage />} />
+      </Routes>,
+      ctx,
+      '/auth/sign-in'
+    )
+    await userEvent.click(screen.getByRole('button', { name: /sign in with google/i }))
+    expect(ctx.signInWithGoogle).toHaveBeenCalledOnce()
+  })
+
+  it('SignUpPage shows a Sign up with Google button', () => {
+    renderWithAuth(<SignUpPage />, makeAuthContext())
+    expect(screen.getByRole('button', { name: /sign up with google/i })).toBeInTheDocument()
+  })
+
+  it('SignUpPage Google button calls signInWithGoogle', async () => {
+    const ctx = makeAuthContext()
+    renderWithAuth(<SignUpPage />, ctx)
+    await userEvent.click(screen.getByRole('button', { name: /sign up with google/i }))
+    expect(ctx.signInWithGoogle).toHaveBeenCalledOnce()
+  })
+
+  it('signInWithGoogle error does not crash the page', async () => {
+    const ctx = makeAuthContext({
+      signInWithGoogle: vi.fn().mockResolvedValue({ error: { message: 'OAuth error' } }),
+    })
+    renderWithAuth(
+      <Routes>
+        <Route path="/auth/sign-in" element={<SignInPage />} />
+      </Routes>,
+      ctx,
+      '/auth/sign-in'
+    )
+    // Click and confirm page stays mounted (no crash)
+    await userEvent.click(screen.getByRole('button', { name: /sign in with google/i }))
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument()
   })
 })
