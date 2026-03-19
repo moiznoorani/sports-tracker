@@ -235,6 +235,7 @@ Test only external, observable behavior — what goes in and what comes out — 
 
 ## Out of Scope (V2+)
 
+- Game Clock & Period Management (Phase 5d): server-authoritative countdown clock per period, Scorekeeper pause/resume, stat locking at period end with 30-second grace window, per-stage OT configuration (allowed/duration/sudden death), Organizer PIN + live approval for post-period stat edits, Basketball quarter/halftime break timers, Ultimate Frisbee soft cap / hard cap logic with dynamic game total recalculation — see GitHub issue #50
 - Offline stat tracking with multi-device sync and Stat Assignment (deferred due to sync complexity)
 - Additional sports: Flag Football, Cricket, Soccer, Tennis
 - Double elimination and pool play + bracket Tournament Formats
