@@ -1,0 +1,26 @@
+{
+  "": {
+    "swift-dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/master.swiftdeps"
+  },
+  "/Users/moiznoorani/sports-tracker/ios/Sources/SportsTracker/Auth/AuthService.swift": {
+    "dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthService.d",
+    "object": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthService.swift.o",
+    "swiftmodule": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthService~partial.swiftmodule",
+    "swift-dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthService.swiftdeps",
+    "diagnostics": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthService.dia"
+  },
+  "/Users/moiznoorani/sports-tracker/ios/Sources/SportsTracker/Auth/AuthViewModel.swift": {
+    "dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthViewModel.d",
+    "object": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthViewModel.swift.o",
+    "swiftmodule": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthViewModel.swiftdeps",
+    "diagnostics": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/AuthViewModel.dia"
+  },
+  "/Users/moiznoorani/sports-tracker/ios/Sources/SportsTracker/Supabase/SupabaseClient.swift": {
+    "dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/SupabaseClient.d",
+    "object": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/SupabaseClient.swift.o",
+    "swiftmodule": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/SupabaseClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/SupabaseClient.swiftdeps",
+    "diagnostics": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/SupabaseClient.dia"
+  }
+}

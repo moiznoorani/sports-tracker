@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTrackerPackageTests.build/master.swiftdeps"
+  },
+  "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTrackerPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTrackerPackageTests.build/runner.d",
+    "object": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTrackerPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTrackerPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTrackerPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTrackerPackageTests.build/runner.dia"
+  }
+}

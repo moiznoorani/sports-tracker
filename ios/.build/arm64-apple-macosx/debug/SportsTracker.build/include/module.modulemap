@@ -1,0 +1,3 @@
+module SportsTracker {
+    header "/Users/moiznoorani/sports-tracker/ios/.build/arm64-apple-macosx/debug/SportsTracker.build/include/SportsTracker-Swift.h"
+}
