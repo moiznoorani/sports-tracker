@@ -1,41 +1,48 @@
-import Supabase
 import Foundation
+import Supabase
 
-struct UserProfile: Codable, Equatable {
-    let id: UUID
-    var displayName: String?
-    var avatarUrl: String?
-    var privacySetting: PrivacySetting
+public enum PrivacySetting: String, Codable, Sendable {
+    case `private` = "private"
+    case `public` = "public"
+}
 
-    enum PrivacySetting: String, Codable {
-        case `private`, `public`
-    }
+public struct UserProfile: Codable {
+    public let id: String
+    public var displayName: String?
+    public var avatarURL: String?
+    public var privacySetting: PrivacySetting
 
     enum CodingKeys: String, CodingKey {
         case id
         case displayName = "display_name"
-        case avatarUrl   = "avatar_url"
+        case avatarURL = "avatar_url"
         case privacySetting = "privacy_setting"
+    }
+
+    public init(id: String, displayName: String?, avatarURL: String?, privacySetting: PrivacySetting) {
+        self.id = id
+        self.displayName = displayName
+        self.avatarURL = avatarURL
+        self.privacySetting = privacySetting
     }
 }
 
-protocol ProfileServiceProtocol: Sendable {
-    func getProfile(userId: UUID) async throws -> UserProfile
-    func updateDisplayName(_ name: String, userId: UUID) async throws
-    func updatePrivacy(_ setting: UserProfile.PrivacySetting, userId: UUID) async throws
-    func uploadAvatar(data: Data, fileName: String, userId: UUID) async throws -> String
+public protocol ProfileServiceProtocol: Sendable {
+    func getProfile(userId: String) async throws -> UserProfile?
+    func updateDisplayName(userId: String, displayName: String) async throws
+    func updatePrivacy(userId: String, privacy: PrivacySetting) async throws
+    func uploadAvatar(userId: String, data: Data, fileExtension: String) async throws -> String
 }
 
-final class ProfileService: ProfileServiceProtocol {
+public final class ProfileService: ProfileServiceProtocol {
     private let client: SupabaseClient
 
-    init(client: SupabaseClient = .shared) {
+    public init(client: SupabaseClient) {
         self.client = client
     }
 
-    func getProfile(userId: UUID) async throws -> UserProfile {
-        try await client
-            .from("users")
+    public func getProfile(userId: String) async throws -> UserProfile? {
+        try await client.from("users")
             .select("id, display_name, avatar_url, privacy_setting")
             .eq("id", value: userId)
             .single()
@@ -43,40 +50,33 @@ final class ProfileService: ProfileServiceProtocol {
             .value
     }
 
-    func updateDisplayName(_ name: String, userId: UUID) async throws {
-        try await client
-            .from("users")
-            .update(["display_name": name])
+    public func updateDisplayName(userId: String, displayName: String) async throws {
+        try await client.from("users")
+            .update(["display_name": displayName])
             .eq("id", value: userId)
             .execute()
     }
 
-    func updatePrivacy(_ setting: UserProfile.PrivacySetting, userId: UUID) async throws {
-        try await client
-            .from("users")
-            .update(["privacy_setting": setting.rawValue])
+    public func updatePrivacy(userId: String, privacy: PrivacySetting) async throws {
+        try await client.from("users")
+            .update(["privacy_setting": privacy.rawValue])
             .eq("id", value: userId)
             .execute()
     }
 
-    func uploadAvatar(data: Data, fileName: String, userId: UUID) async throws -> String {
-        let path = "\(userId)/\(fileName)"
-
-        try await client.storage
-            .from("avatars")
-            .upload(path, data: data, options: FileOptions(upsert: true))
-
-        let response = try client.storage
-            .from("avatars")
-            .getPublicURL(path: path)
-
-        let avatarUrl = response.absoluteString
-        try await client
-            .from("users")
-            .update(["avatar_url": avatarUrl])
+    public func uploadAvatar(userId: String, data: Data, fileExtension: String) async throws -> String {
+        let path = "\(userId)/avatar.\(fileExtension)"
+        try await client.storage.from("avatars").upload(
+            path,
+            data: data,
+            options: FileOptions(upsert: true)
+        )
+        let urlResponse = try client.storage.from("avatars").getPublicURL(path: path)
+        let publicURL = urlResponse.absoluteString
+        try await client.from("users")
+            .update(["avatar_url": publicURL])
             .eq("id", value: userId)
             .execute()
-
-        return avatarUrl
+        return publicURL
     }
 }

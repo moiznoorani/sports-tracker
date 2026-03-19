@@ -2,51 +2,45 @@ import Foundation
 @testable import SportsTracker
 
 final class MockProfileService: ProfileServiceProtocol, @unchecked Sendable {
-    var stubbedProfile: UserProfile?
-    var shouldThrow: Error?
-    var uploadedAvatarUrl = "https://example.com/avatar.png"
+    var stubbedProfile: UserProfile? = nil
+    var shouldThrow: Error? = nil
 
     var getProfileCalled = false
     var updateDisplayNameCalled = false
     var updatePrivacyCalled = false
     var uploadAvatarCalled = false
 
+    var lastUserId: String?
     var lastDisplayName: String?
-    var lastPrivacy: UserProfile.PrivacySetting?
+    var lastPrivacy: PrivacySetting?
     var lastAvatarData: Data?
-    var lastUserId: UUID?
 
-    func getProfile(userId: UUID) async throws -> UserProfile {
+    func getProfile(userId: String) async throws -> UserProfile? {
         getProfileCalled = true
         lastUserId = userId
         if let error = shouldThrow { throw error }
-        return stubbedProfile ?? UserProfile(
-            id: userId,
-            displayName: nil,
-            avatarUrl: nil,
-            privacySetting: .private
-        )
+        return stubbedProfile
     }
 
-    func updateDisplayName(_ name: String, userId: UUID) async throws {
+    func updateDisplayName(userId: String, displayName: String) async throws {
         updateDisplayNameCalled = true
-        lastDisplayName = name
         lastUserId = userId
+        lastDisplayName = displayName
         if let error = shouldThrow { throw error }
     }
 
-    func updatePrivacy(_ setting: UserProfile.PrivacySetting, userId: UUID) async throws {
+    func updatePrivacy(userId: String, privacy: PrivacySetting) async throws {
         updatePrivacyCalled = true
-        lastPrivacy = setting
         lastUserId = userId
+        lastPrivacy = privacy
         if let error = shouldThrow { throw error }
     }
 
-    func uploadAvatar(data: Data, fileName: String, userId: UUID) async throws -> String {
+    func uploadAvatar(userId: String, data: Data, fileExtension: String) async throws -> String {
         uploadAvatarCalled = true
-        lastAvatarData = data
         lastUserId = userId
+        lastAvatarData = data
         if let error = shouldThrow { throw error }
-        return uploadedAvatarUrl
+        return "https://example.com/avatar.png"
     }
 }

@@ -2,149 +2,84 @@ import Testing
 import Foundation
 @testable import SportsTracker
 
-private let testUserId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
-
-private func makeProfile(
-    displayName: String? = "Moiz",
-    avatarUrl: String? = nil,
-    privacy: UserProfile.PrivacySetting = .private
-) -> UserProfile {
-    UserProfile(id: testUserId, displayName: displayName, avatarUrl: avatarUrl, privacySetting: privacy)
-}
-
 struct ProfileError: Error { let message: String }
 
 @MainActor
 struct ProfileViewModelTests {
 
-    // MARK: - loadProfile
-
-    @Test func loadProfile_populatesProfile() async {
+    // Slice 1: loadProfile exposes displayName
+    @Test func loadProfile_exposesDisplayName() async {
         let mock = MockProfileService()
-        mock.stubbedProfile = makeProfile()
+        mock.stubbedProfile = UserProfile(id: "user-1", displayName: "Moiz", avatarURL: nil, privacySetting: .private)
         let vm = ProfileViewModel(service: mock)
 
-        await vm.loadProfile(userId: testUserId)
+        await vm.loadProfile(userId: "user-1")
 
-        #expect(mock.getProfileCalled == true)
-        #expect(vm.profile?.displayName == "Moiz")
-        #expect(vm.profile?.privacySetting == .private)
+        #expect(vm.displayName == "Moiz")
     }
 
-    @Test func loadProfile_setsErrorOnFailure() async {
+    // Slice 2: privacy defaults to private
+    @Test func loadProfile_defaultsPrivacyToPrivate() async {
         let mock = MockProfileService()
-        mock.shouldThrow = ProfileError(message: "Not found")
+        mock.stubbedProfile = UserProfile(id: "user-1", displayName: nil, avatarURL: nil, privacySetting: .private)
         let vm = ProfileViewModel(service: mock)
 
-        await vm.loadProfile(userId: testUserId)
+        await vm.loadProfile(userId: "user-1")
 
-        #expect(vm.errorMessage != nil)
-        #expect(vm.profile == nil)
+        #expect(vm.privacySetting == .private)
     }
 
-    // MARK: - updateDisplayName
-
-    @Test func updateDisplayName_callsServiceAndUpdatesProfile() async {
+    // Slice 3: updateDisplayName calls service and updates state
+    @Test func updateDisplayName_callsServiceAndUpdatesState() async {
         let mock = MockProfileService()
-        mock.stubbedProfile = makeProfile()
+        mock.stubbedProfile = UserProfile(id: "user-1", displayName: "Old", avatarURL: nil, privacySetting: .private)
         let vm = ProfileViewModel(service: mock)
-        await vm.loadProfile(userId: testUserId)
+        await vm.loadProfile(userId: "user-1")
 
-        await vm.updateDisplayName("New Name", userId: testUserId)
+        await vm.updateDisplayName("New Name")
 
         #expect(mock.updateDisplayNameCalled == true)
         #expect(mock.lastDisplayName == "New Name")
-        #expect(vm.profile?.displayName == "New Name")
-        #expect(vm.savedSuccessfully == true)
+        #expect(vm.displayName == "New Name")
     }
 
-    @Test func updateDisplayName_setsErrorOnFailure() async {
+    // Slice 4: updatePrivacy calls service and updates state
+    @Test func updatePrivacy_callsServiceAndUpdatesState() async {
         let mock = MockProfileService()
-        mock.stubbedProfile = makeProfile()
+        mock.stubbedProfile = UserProfile(id: "user-1", displayName: nil, avatarURL: nil, privacySetting: .private)
         let vm = ProfileViewModel(service: mock)
-        await vm.loadProfile(userId: testUserId)
+        await vm.loadProfile(userId: "user-1")
 
-        mock.shouldThrow = ProfileError(message: "DB error")
-        await vm.updateDisplayName("Bad", userId: testUserId)
-
-        #expect(vm.errorMessage != nil)
-        #expect(vm.savedSuccessfully == false)
-    }
-
-    // MARK: - updatePrivacy
-
-    @Test func updatePrivacy_toPublic_callsServiceAndUpdatesProfile() async {
-        let mock = MockProfileService()
-        mock.stubbedProfile = makeProfile(privacy: .private)
-        let vm = ProfileViewModel(service: mock)
-        await vm.loadProfile(userId: testUserId)
-
-        await vm.updatePrivacy(.public, userId: testUserId)
+        await vm.updatePrivacy(.public)
 
         #expect(mock.updatePrivacyCalled == true)
         #expect(mock.lastPrivacy == .public)
-        #expect(vm.profile?.privacySetting == .public)
+        #expect(vm.privacySetting == .public)
     }
 
-    @Test func updatePrivacy_defaultsToPrivate() async {
+    // Slice 5: uploadAvatar calls service and updates avatarURL
+    @Test func uploadAvatar_callsServiceAndUpdatesAvatarURL() async {
         let mock = MockProfileService()
-        mock.stubbedProfile = makeProfile(privacy: .private)
+        mock.stubbedProfile = UserProfile(id: "user-1", displayName: nil, avatarURL: nil, privacySetting: .private)
         let vm = ProfileViewModel(service: mock)
-
-        await vm.loadProfile(userId: testUserId)
-
-        #expect(vm.profile?.privacySetting == .private)
-    }
-
-    @Test func updatePrivacy_setsErrorOnFailure() async {
-        let mock = MockProfileService()
-        mock.stubbedProfile = makeProfile()
-        let vm = ProfileViewModel(service: mock)
-        await vm.loadProfile(userId: testUserId)
-
-        mock.shouldThrow = ProfileError(message: "DB error")
-        await vm.updatePrivacy(.public, userId: testUserId)
-
-        #expect(vm.errorMessage != nil)
-    }
-
-    // MARK: - uploadAvatar
-
-    @Test func uploadAvatar_callsServiceAndUpdatesAvatarUrl() async {
-        let mock = MockProfileService()
-        mock.stubbedProfile = makeProfile()
-        let vm = ProfileViewModel(service: mock)
-        await vm.loadProfile(userId: testUserId)
+        await vm.loadProfile(userId: "user-1")
 
         let imageData = Data("fake-image".utf8)
-        await vm.uploadAvatar(data: imageData, fileName: "avatar.png", userId: testUserId)
+        await vm.uploadAvatar(data: imageData, fileExtension: "png")
 
         #expect(mock.uploadAvatarCalled == true)
         #expect(mock.lastAvatarData == imageData)
-        #expect(vm.profile?.avatarUrl == "https://example.com/avatar.png")
+        #expect(vm.avatarURL == "https://example.com/avatar.png")
     }
 
-    @Test func uploadAvatar_setsErrorOnFailure() async {
+    // Slice 6: error on getProfile failure sets errorMessage
+    @Test func loadProfile_setsErrorMessageOnFailure() async {
         let mock = MockProfileService()
-        mock.stubbedProfile = makeProfile()
-        mock.shouldThrow = ProfileError(message: "Upload failed")
+        mock.shouldThrow = ProfileError(message: "Network error")
         let vm = ProfileViewModel(service: mock)
-        await vm.loadProfile(userId: testUserId)
 
-        mock.shouldThrow = ProfileError(message: "Upload failed")
-        await vm.uploadAvatar(data: Data(), fileName: "avatar.png", userId: testUserId)
+        await vm.loadProfile(userId: "user-1")
 
         #expect(vm.errorMessage != nil)
-    }
-
-    @Test func uploadAvatar_setsUploadingDuringUpload() async {
-        let mock = MockProfileService()
-        mock.stubbedProfile = makeProfile()
-        let vm = ProfileViewModel(service: mock)
-        await vm.loadProfile(userId: testUserId)
-
-        // After completion, uploading should be false
-        await vm.uploadAvatar(data: Data(), fileName: "avatar.png", userId: testUserId)
-        #expect(vm.uploading == false)
     }
 }

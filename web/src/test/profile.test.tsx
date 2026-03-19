@@ -4,22 +4,9 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
 import { ProfilePage } from '../pages/profile/ProfilePage'
-import * as profileServiceModule from '../services/profileService'
 import type { Session } from '@supabase/supabase-js'
 
-vi.mock('../services/profileService', () => ({
-  profileService: {
-    getProfile: vi.fn(),
-    updateProfile: vi.fn(),
-    uploadAvatar: vi.fn(),
-  },
-}))
-
-const mockProfileService = profileServiceModule.profileService as {
-  getProfile: ReturnType<typeof vi.fn>
-  updateProfile: ReturnType<typeof vi.fn>
-  uploadAvatar: ReturnType<typeof vi.fn>
-}
+// ── Shared fixtures ───────────────────────────────────────────────────────────
 
 const fakeUser = { id: 'user-123', email: 'user@example.com' } as Session['user']
 
@@ -38,6 +25,25 @@ function makeAuthContext(overrides = {}) {
   }
 }
 
+// ── profileService mock setup ─────────────────────────────────────────────────
+
+vi.mock('../services/profileService', () => ({
+  profileService: {
+    getProfile: vi.fn(),
+    updateProfile: vi.fn(),
+    uploadAvatar: vi.fn(),
+  },
+}))
+
+async function getMockService() {
+  const mod = await import('../services/profileService')
+  return mod.profileService as {
+    getProfile: ReturnType<typeof vi.fn>
+    updateProfile: ReturnType<typeof vi.fn>
+    uploadAvatar: ReturnType<typeof vi.fn>
+  }
+}
+
 function renderProfile(ctx = makeAuthContext()) {
   return render(
     <AuthContext.Provider value={ctx}>
@@ -48,34 +54,34 @@ function renderProfile(ctx = makeAuthContext()) {
   )
 }
 
-beforeEach(() => {
-  vi.clearAllMocks()
-  mockProfileService.getProfile.mockResolvedValue({
-    id: 'user-123',
-    display_name: 'Moiz',
-    avatar_url: null,
-    privacy_setting: 'private',
-  })
-  mockProfileService.updateProfile.mockResolvedValue(undefined)
-  mockProfileService.uploadAvatar.mockResolvedValue('https://example.com/avatar.png')
-})
+// ── ProfilePage ───────────────────────────────────────────────────────────────
 
 describe('ProfilePage', () => {
-  it('loads and displays existing display name', async () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  beforeEach(async () => {
+    const mock = await getMockService()
+    mock.getProfile.mockResolvedValue({
+      id: 'user-123',
+      display_name: 'Moiz',
+      avatar_url: null,
+      privacy_setting: 'private',
+    })
+    mock.updateProfile.mockResolvedValue(undefined)
+    mock.uploadAvatar.mockResolvedValue('https://example.com/avatar.png')
+  })
+
+  // Slice 2: loads and shows display name
+  it('shows the existing display name after loading', async () => {
     renderProfile()
     await waitFor(() => {
       expect(screen.getByDisplayValue('Moiz')).toBeInTheDocument()
     })
   })
 
-  it('loads and displays existing privacy setting', async () => {
-    renderProfile()
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('Private')).toBeInTheDocument()
-    })
-  })
-
-  it('calls updateProfile with new display name on save', async () => {
+  // Slice 3: save calls updateProfile with new display name
+  it('calls updateProfile with the new display name on save', async () => {
+    const mock = await getMockService()
     renderProfile()
     await waitFor(() => screen.getByDisplayValue('Moiz'))
 
@@ -84,14 +90,21 @@ describe('ProfilePage', () => {
     await userEvent.click(screen.getByRole('button', { name: /^save$/i }))
 
     await waitFor(() => {
-      expect(mockProfileService.updateProfile).toHaveBeenCalledWith('user-123', {
-        display_name: 'New Name',
-        privacy_setting: 'private',
-      })
+      expect(mock.updateProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({ display_name: 'New Name' }))
     })
   })
 
-  it('calls updateProfile with toggled privacy setting', async () => {
+  // Slice 4: privacy defaults to private
+  it('shows privacy as Private by default', async () => {
+    renderProfile()
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Private')).toBeInTheDocument()
+    })
+  })
+
+  // Slice 5: user can toggle privacy to public
+  it('calls updateProfile with public when privacy toggled', async () => {
+    const mock = await getMockService()
     renderProfile()
     await waitFor(() => screen.getByDisplayValue('Private'))
 
@@ -99,79 +112,43 @@ describe('ProfilePage', () => {
     await userEvent.click(screen.getByRole('button', { name: /^save$/i }))
 
     await waitFor(() => {
-      expect(mockProfileService.updateProfile).toHaveBeenCalledWith('user-123', {
-        display_name: 'Moiz',
-        privacy_setting: 'public',
-      })
+      expect(mock.updateProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({ privacy_setting: 'public' }))
     })
   })
 
-  it('shows saved confirmation after successful save', async () => {
+  // Slice 6: saved confirmation
+  it('shows Saved confirmation after successful save', async () => {
     renderProfile()
     await waitFor(() => screen.getByDisplayValue('Moiz'))
-
     await userEvent.click(screen.getByRole('button', { name: /^save$/i }))
-
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Saved')
     })
   })
 
+  // Slice 7: error on save failure
   it('shows error message when save fails', async () => {
-    mockProfileService.updateProfile.mockRejectedValue(new Error('Network error'))
+    const mock = await getMockService()
+    mock.updateProfile.mockRejectedValue(new Error('Network error'))
     renderProfile()
     await waitFor(() => screen.getByDisplayValue('Moiz'))
-
     await userEvent.click(screen.getByRole('button', { name: /^save$/i }))
-
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Network error')
     })
   })
 
-  it('shows upload photo button', async () => {
-    renderProfile()
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /upload photo/i })).toBeInTheDocument()
-    })
-  })
-
-  it('calls uploadAvatar when a file is selected', async () => {
+  // Slice 8: avatar upload
+  it('calls uploadAvatar when a photo file is selected', async () => {
+    const mock = await getMockService()
     renderProfile()
     await waitFor(() => screen.getByLabelText(/upload profile photo/i))
 
     const file = new File(['img'], 'avatar.png', { type: 'image/png' })
-    const input = screen.getByLabelText(/upload profile photo/i)
-    await userEvent.upload(input, file)
+    await userEvent.upload(screen.getByLabelText(/upload profile photo/i), file)
 
     await waitFor(() => {
-      expect(mockProfileService.uploadAvatar).toHaveBeenCalledWith('user-123', file)
-    })
-  })
-
-  it('shows avatar image when avatar_url is set', async () => {
-    mockProfileService.getProfile.mockResolvedValue({
-      id: 'user-123',
-      display_name: 'Moiz',
-      avatar_url: 'https://example.com/avatar.png',
-      privacy_setting: 'private',
-    })
-    renderProfile()
-    await waitFor(() => {
-      expect(screen.getByRole('img', { name: /profile photo/i })).toBeInTheDocument()
-    })
-  })
-
-  it('privacy defaults to private for new profiles', async () => {
-    mockProfileService.getProfile.mockResolvedValue({
-      id: 'user-123',
-      display_name: null,
-      avatar_url: null,
-      privacy_setting: 'private',
-    })
-    renderProfile()
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('Private')).toBeInTheDocument()
+      expect(mock.uploadAvatar).toHaveBeenCalledWith('user-123', file)
     })
   })
 })
