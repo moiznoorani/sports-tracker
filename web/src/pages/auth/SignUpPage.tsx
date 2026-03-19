@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export function SignUpPage() {
-  const { signUp } = useAuth()
+  const { signUp, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -70,6 +70,10 @@ export function SignUpPage() {
           {submitting ? 'Creating account…' : 'Create account'}
         </button>
       </form>
+      <hr />
+      <button type="button" onClick={() => signInWithGoogle()}>
+        Sign up with Google
+      </button>
       <p>Already have an account? <Link to="/auth/sign-in">Sign in</Link></p>
     </div>
   )

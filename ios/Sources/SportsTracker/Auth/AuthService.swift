@@ -5,6 +5,7 @@ import Foundation
 enum AuthServiceError: Error, LocalizedError {
     case signUpFailed(Error)
     case signInFailed(Error)
+    case signInWithAppleFailed(Error)
     case signOutFailed(Error)
     case resetPasswordFailed(Error)
     case updatePasswordFailed(Error)
@@ -12,12 +13,13 @@ enum AuthServiceError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .signUpFailed(let e):         return e.localizedDescription
-        case .signInFailed(let e):         return e.localizedDescription
-        case .signOutFailed(let e):        return e.localizedDescription
-        case .resetPasswordFailed(let e):  return e.localizedDescription
-        case .updatePasswordFailed(let e): return e.localizedDescription
-        case .sessionRefreshFailed(let e): return e.localizedDescription
+        case .signUpFailed(let e):          return e.localizedDescription
+        case .signInFailed(let e):          return e.localizedDescription
+        case .signInWithAppleFailed(let e): return e.localizedDescription
+        case .signOutFailed(let e):         return e.localizedDescription
+        case .resetPasswordFailed(let e):   return e.localizedDescription
+        case .updatePasswordFailed(let e):  return e.localizedDescription
+        case .sessionRefreshFailed(let e):  return e.localizedDescription
         }
     }
 }
@@ -27,6 +29,7 @@ protocol AuthServiceProtocol: Sendable {
     var currentSession: Session? { get async }
     func signUp(email: String, password: String) async throws
     func signIn(email: String, password: String) async throws
+    func signInWithApple(idToken: String, nonce: String) async throws
     func signOut() async throws
     func resetPassword(email: String) async throws
     func updatePassword(_ newPassword: String) async throws
@@ -59,6 +62,16 @@ final class AuthService: AuthServiceProtocol {
             try await client.auth.signIn(email: email, password: password)
         } catch {
             throw AuthServiceError.signInFailed(error)
+        }
+    }
+
+    func signInWithApple(idToken: String, nonce: String) async throws {
+        do {
+            try await client.auth.signInWithIdToken(
+                credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
+            )
+        } catch {
+            throw AuthServiceError.signInWithAppleFailed(error)
         }
     }
 

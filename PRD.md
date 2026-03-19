@@ -5,6 +5,7 @@
 | Issue | Title | Status |
 |-------|-------|--------|
 | #3 | Phase 1 [Auth]: Email/password sign up, sign in, sign out, password reset | Closed |
+| #4 | Phase 1 [Auth]: Apple + Google OAuth | Closed |
 
 ## Problem Statement
 
