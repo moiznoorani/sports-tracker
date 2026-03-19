@@ -25,7 +25,7 @@ enum AuthServiceError: Error, LocalizedError {
 }
 
 /// Protocol so AuthService can be mocked in tests.
-protocol AuthServiceProtocol: Sendable {
+public protocol AuthServiceProtocol: Sendable {
     var currentSession: Session? { get async }
     func signUp(email: String, password: String) async throws
     func signIn(email: String, password: String) async throws
@@ -36,20 +36,20 @@ protocol AuthServiceProtocol: Sendable {
 }
 
 /// Live implementation backed by Supabase Auth.
-final class AuthService: AuthServiceProtocol {
+public final class AuthService: AuthServiceProtocol {
     private let client: SupabaseClient
 
-    init(client: SupabaseClient = .shared) {
+    public init(client: SupabaseClient = .shared) {
         self.client = client
     }
 
-    var currentSession: Session? {
+    public var currentSession: Session? {
         get async {
             try? await client.auth.session
         }
     }
 
-    func signUp(email: String, password: String) async throws {
+    public func signUp(email: String, password: String) async throws {
         do {
             try await client.auth.signUp(email: email, password: password)
         } catch {
@@ -57,7 +57,7 @@ final class AuthService: AuthServiceProtocol {
         }
     }
 
-    func signIn(email: String, password: String) async throws {
+    public func signIn(email: String, password: String) async throws {
         do {
             try await client.auth.signIn(email: email, password: password)
         } catch {
@@ -65,7 +65,7 @@ final class AuthService: AuthServiceProtocol {
         }
     }
 
-    func signInWithApple(idToken: String, nonce: String) async throws {
+    public func signInWithApple(idToken: String, nonce: String) async throws {
         do {
             try await client.auth.signInWithIdToken(
                 credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
@@ -75,7 +75,7 @@ final class AuthService: AuthServiceProtocol {
         }
     }
 
-    func signOut() async throws {
+    public func signOut() async throws {
         do {
             try await client.auth.signOut()
         } catch {
@@ -83,7 +83,7 @@ final class AuthService: AuthServiceProtocol {
         }
     }
 
-    func resetPassword(email: String) async throws {
+    public func resetPassword(email: String) async throws {
         do {
             try await client.auth.resetPasswordForEmail(email)
         } catch {
@@ -91,7 +91,7 @@ final class AuthService: AuthServiceProtocol {
         }
     }
 
-    func updatePassword(_ newPassword: String) async throws {
+    public func updatePassword(_ newPassword: String) async throws {
         do {
             try await client.auth.update(user: UserAttributes(password: newPassword))
         } catch {

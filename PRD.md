@@ -4,8 +4,22 @@
 
 | Issue | Title | Status |
 |-------|-------|--------|
-| #3 | Phase 1 [Auth]: Email/password sign up, sign in, sign out, password reset | Closed |
-| #4 | Phase 1 [Auth]: Apple + Google OAuth | Closed |
+| #3 | Phase 1 [Auth]: Email/password sign up, sign in, sign out, password reset | Closed ✅ |
+| #4 | Phase 1 [Auth]: Apple + Google OAuth | Closed ✅ |
+| #5 | Phase 1 [Auth]: Player profile — display name, avatar upload, privacy toggle | Closed ✅ |
+
+### Phase 1 Deploy — Verified 2026-03-19
+- iPadOS (Xcode 26.4, iPad Pro 13" M5 sim): **BUILD SUCCEEDED**, app runs
+- Web typecheck + 26 tests: **all pass**
+- Swift 27 tests: **all pass**
+- Supabase migrations applied: `users` table, `career_stats` table, `avatars` storage bucket, all RLS policies live
+- DB trigger verified: sign-up auto-creates `users` + `career_stats` rows, `privacy_setting` defaults to `private`
+
+### Bugs fixed during deploy verification
+- `ios/Package.swift`: bumped minimum platform from `.iOS(.v17)` → `.iOS(.v18)` (required by `Tab` API used in `MainTabView`)
+- `SportsTrackerApp/`: added Xcode project with correct `SportsTracker` package product dependency wired to app target
+- `SportsTrackerApp/Info.plist`: created standalone plist with `SUPABASE_URL`/`SUPABASE_ANON_KEY` build-setting refs; switched to `GENERATE_INFOPLIST_FILE = NO`
+- `web/.env`: corrected malformed anon key (trailing garbage text removed)
 
 ## Problem Statement
 

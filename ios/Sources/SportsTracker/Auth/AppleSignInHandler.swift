@@ -5,12 +5,12 @@ import Foundation
 /// Manages the Apple Sign-In flow: generates a nonce, presents the
 /// ASAuthorizationController, and returns the ID token + nonce on success.
 @MainActor
-final class AppleSignInHandler: NSObject, ASAuthorizationControllerDelegate {
+public final class AppleSignInHandler: NSObject, ASAuthorizationControllerDelegate {
     private var continuation: CheckedContinuation<(idToken: String, nonce: String), Error>?
     private var currentNonce: String?
 
     /// Presents the Apple Sign-In sheet and returns the id token + nonce pair.
-    func signIn() async throws -> (idToken: String, nonce: String) {
+    public func signIn() async throws -> (idToken: String, nonce: String) {
         let nonce = randomNonce()
         currentNonce = nonce
 
@@ -29,7 +29,7 @@ final class AppleSignInHandler: NSObject, ASAuthorizationControllerDelegate {
 
     // MARK: - ASAuthorizationControllerDelegate
 
-    nonisolated func authorizationController(
+    public nonisolated func authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithAuthorization authorization: ASAuthorization
     ) {
@@ -49,7 +49,7 @@ final class AppleSignInHandler: NSObject, ASAuthorizationControllerDelegate {
         }
     }
 
-    nonisolated func authorizationController(
+    public nonisolated func authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithError error: Error
     ) {

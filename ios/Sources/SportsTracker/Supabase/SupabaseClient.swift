@@ -2,7 +2,7 @@ import Supabase
 import Foundation
 
 extension SupabaseClient {
-    static let shared: SupabaseClient = {
+    public static let shared: SupabaseClient = {
         guard
             let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
             let url = URL(string: urlString),
