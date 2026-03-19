@@ -6,6 +6,7 @@
 |-------|-------|--------|
 | #3 | Phase 1 [Auth]: Email/password sign up, sign in, sign out, password reset | Closed |
 | #4 | Phase 1 [Auth]: Apple + Google OAuth | Closed |
+| #5 | Phase 1 [Auth]: Player profile — display name, avatar upload, privacy toggle | Closed |
 
 ## Problem Statement
 
