@@ -8,6 +8,8 @@ import { UpdatePasswordPage } from './pages/auth/UpdatePasswordPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
 import { LeaguesPage } from './pages/leagues/LeaguesPage'
 import { CreateLeaguePage } from './pages/leagues/CreateLeaguePage'
+import { LeagueDetailPage } from './pages/leagues/LeagueDetailPage'
+import { JoinLeaguePage } from './pages/leagues/JoinLeaguePage'
 
 function Dashboard() {
   return <h1>Dashboard</h1>
@@ -30,6 +32,8 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/leagues" element={<LeaguesPage />} />
             <Route path="/leagues/new" element={<CreateLeaguePage />} />
+            <Route path="/leagues/join/:token" element={<JoinLeaguePage />} />
+            <Route path="/leagues/:id" element={<LeagueDetailPage />} />
           </Route>
 
           {/* Catch-all */}

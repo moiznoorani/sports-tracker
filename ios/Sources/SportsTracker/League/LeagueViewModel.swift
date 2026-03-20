@@ -8,10 +8,17 @@ public final class LeagueViewModel {
     public var isLoading = false
     public var errorMessage: String? = nil
 
+    // Detail
+    public var selectedLeague: League? = nil
+
     // Create form state
     public var newName: String = ""
     public var newSport: Sport = .ultimateFrisbee
     public var newVisibility: Visibility = .private
+
+    // Join form state
+    public var joinToken: String = ""
+    public var joinSuccess = false
 
     private let service: LeagueServiceProtocol
 
@@ -28,6 +35,26 @@ public final class LeagueViewModel {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    public func loadLeague(id: String) async {
+        errorMessage = nil
+        do {
+            selectedLeague = try await service.getLeague(id: id)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    public func joinByToken() async {
+        errorMessage = nil
+        do {
+            try await service.joinByToken(joinToken)
+            joinSuccess = true
+            await loadLeagues()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     public func createLeague(name: String, sport: Sport, visibility: Visibility) async {

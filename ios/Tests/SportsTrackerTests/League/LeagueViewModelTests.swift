@@ -21,8 +21,8 @@ struct LeagueViewModelTests {
     @Test func loadLeagues_exposesLeaguesFromService() async {
         let mock = MockLeagueService()
         mock.stubbedLeagues = [
-            League(id: "1", name: "Tuesday Ultimate", sport: .ultimateFrisbee, visibility: .public, lat: nil, lng: nil),
-            League(id: "2", name: "Weekend Hoops", sport: .basketball, visibility: .private, lat: nil, lng: nil),
+            League(id: "1", name: "Tuesday Ultimate", sport: .ultimateFrisbee, visibility: .public),
+            League(id: "2", name: "Weekend Hoops", sport: .basketball, visibility: .private),
         ]
         let vm = LeagueViewModel(service: mock)
 
@@ -83,5 +83,64 @@ struct LeagueViewModelTests {
         let vm = LeagueViewModel(service: mock)
 
         #expect(vm.newVisibility == .private)
+    }
+
+    // MARK: - loadLeague
+
+    @Test func loadLeague_exposesSelectedLeagueWithToken() async {
+        let mock = MockLeagueService()
+        mock.stubbedLeague = League(id: "league-1", name: "Tuesday Ultimate", sport: .ultimateFrisbee, visibility: .private, inviteToken: "tok-abc")
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.loadLeague(id: "league-1")
+
+        #expect(vm.selectedLeague?.name == "Tuesday Ultimate")
+        #expect(vm.selectedLeague?.inviteToken == "tok-abc")
+    }
+
+    @Test func loadLeague_setsErrorMessageOnFailure() async {
+        let mock = MockLeagueService()
+        mock.shouldThrow = LeagueError(message: "Not found")
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.loadLeague(id: "bad-id")
+
+        #expect(vm.errorMessage != nil)
+        #expect(vm.selectedLeague == nil)
+    }
+
+    // MARK: - joinByToken
+
+    @Test func joinByToken_callsServiceWithToken() async {
+        let mock = MockLeagueService()
+        let vm = LeagueViewModel(service: mock)
+        vm.joinToken = "tok-abc"
+
+        await vm.joinByToken()
+
+        #expect(mock.joinByTokenCalled == true)
+        #expect(mock.lastJoinToken == "tok-abc")
+    }
+
+    @Test func joinByToken_setsJoinSuccessOnSuccess() async {
+        let mock = MockLeagueService()
+        let vm = LeagueViewModel(service: mock)
+        vm.joinToken = "tok-abc"
+
+        await vm.joinByToken()
+
+        #expect(vm.joinSuccess == true)
+    }
+
+    @Test func joinByToken_setsErrorMessageOnFailure() async {
+        let mock = MockLeagueService()
+        mock.shouldThrow = LeagueError(message: "Invalid invite token")
+        let vm = LeagueViewModel(service: mock)
+        vm.joinToken = "bad-token"
+
+        await vm.joinByToken()
+
+        #expect(vm.errorMessage != nil)
+        #expect(vm.joinSuccess == false)
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 public struct LeaguesView: View {
     @Bindable var vm: LeagueViewModel
     @State private var showCreate = false
+    @State private var showJoin = false
 
     public init(vm: LeagueViewModel) {
         self.vm = vm
@@ -14,24 +15,24 @@ public struct LeaguesView: View {
                 if vm.isLoading {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if let error = vm.errorMessage {
-                    ContentUnavailableView("Error", systemImage: "exclamationmark.triangle", description: Text(error))
-                } else if vm.leagues.isEmpty {
+                } else if !vm.leagues.isEmpty {
+                    List(vm.leagues) { league in
+                        NavigationLink(destination: LeagueDetailView(vm: vm, leagueId: league.id)) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(league.name)
+                                    .font(.headline)
+                                Text(league.sport.displayName)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } else {
                     ContentUnavailableView(
                         "No Leagues",
                         systemImage: "sportscourt",
-                        description: Text("Create a League to get started.")
+                        description: Text("Create or join a League to get started.")
                     )
-                } else {
-                    List(vm.leagues) { league in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(league.name)
-                                .font(.headline)
-                            Text(league.sport.displayName)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
                 }
             }
             .navigationTitle("My Leagues")
@@ -41,9 +42,18 @@ public struct LeaguesView: View {
                         showCreate = true
                     }
                 }
+                ToolbarItem(placement: .secondaryAction) {
+                    Button("Join League", systemImage: "person.badge.plus") {
+                        vm.errorMessage = nil
+                        showJoin = true
+                    }
+                }
             }
             .sheet(isPresented: $showCreate) {
                 CreateLeagueView(vm: vm, isPresented: $showCreate)
+            }
+            .sheet(isPresented: $showJoin) {
+                JoinLeagueView(vm: vm, isPresented: $showJoin)
             }
             .task { await vm.loadLeagues() }
         }
