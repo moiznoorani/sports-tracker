@@ -96,6 +96,7 @@ public final class LeagueViewModel {
         do {
             try await service.joinLeague(leagueId: leagueId)
             await loadLeagues()
+            await browseLeagues()
         } catch {
             errorMessage = error.localizedDescription
         }

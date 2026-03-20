@@ -31,6 +31,13 @@ public struct BrowseLeaguesView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif
+            .safeAreaInset(edge: .top) {
+                if let error = vm.errorMessage {
+                    ErrorBanner(error)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                }
+            }
             .background(AppTheme.backgroundGradient.ignoresSafeArea())
             .task {
                 await vm.loadLeagues()
