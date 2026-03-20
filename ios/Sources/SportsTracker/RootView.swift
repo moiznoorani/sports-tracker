@@ -3,6 +3,7 @@ import SwiftUI
 public struct RootView: View {
     @State private var authVM = AuthViewModel()
     @State private var profileVM = ProfileViewModel()
+    @State private var leagueVM = LeagueViewModel()
 
     public init() {}
 
@@ -17,6 +18,7 @@ public struct RootView: View {
             MainTabView(
                 authVM: authVM,
                 profileVM: profileVM,
+                leagueVM: leagueVM,
                 userId: session.user.id.uuidString
             )
         }
