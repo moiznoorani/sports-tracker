@@ -117,11 +117,14 @@ public final class LeagueService: LeagueServiceProtocol {
     }
 
     public func getMyLeagues() async throws -> [League] {
-        try await client.from("leagues")
-            .select("id, name, sport, visibility, lat, lng")
-            .order("created_at", ascending: false)
+        struct MemberRow: Decodable {
+            let leagues: League
+        }
+        let rows: [MemberRow] = try await client.from("league_members")
+            .select("leagues(id, name, sport, visibility, lat, lng)")
             .execute()
             .value
+        return rows.map(\.leagues)
     }
 
     public func getLeague(id: String) async throws -> League {

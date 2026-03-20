@@ -41,11 +41,10 @@ export interface CreateLeagueParams {
 export const leagueService = {
   async getMyLeagues(): Promise<League[]> {
     const { data, error } = await supabase
-      .from('leagues')
-      .select('id, name, sport, visibility, lat, lng')
-      .order('created_at', { ascending: false })
+      .from('league_members')
+      .select('leagues(id, name, sport, visibility, lat, lng)')
     if (error) throw error
-    return data ?? []
+    return (data ?? []).map(row => row.leagues).filter(Boolean) as League[]
   },
 
   async getLeague(id: string): Promise<League> {
