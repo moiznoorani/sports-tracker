@@ -90,6 +90,11 @@ describe('LeagueDetailPage', () => {
     mock.getMyLeagues.mockResolvedValue([])
   })
 
+  it('shows a loading state initially', () => {
+    renderDetail()
+    expect(screen.getByRole('status')).toBeInTheDocument()
+  })
+
   it('shows the league name', async () => {
     renderDetail()
     await waitFor(() => {

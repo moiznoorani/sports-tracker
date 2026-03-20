@@ -132,6 +132,20 @@ struct LeagueViewModelTests {
         #expect(vm.joinSuccess == true)
     }
 
+    @Test func joinByToken_reloadsLeaguesOnSuccess() async {
+        let mock = MockLeagueService()
+        mock.stubbedLeagues = [
+            League(id: "league-1", name: "Tuesday Ultimate", sport: .ultimateFrisbee, visibility: .private),
+        ]
+        let vm = LeagueViewModel(service: mock)
+        vm.joinToken = "tok-abc"
+
+        await vm.joinByToken()
+
+        #expect(vm.leagues.count == 1)
+        #expect(vm.leagues[0].name == "Tuesday Ultimate")
+    }
+
     @Test func joinByToken_setsErrorMessageOnFailure() async {
         let mock = MockLeagueService()
         mock.shouldThrow = LeagueError(message: "Invalid invite token")

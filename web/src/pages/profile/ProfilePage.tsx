@@ -39,7 +39,11 @@ export function ProfilePage() {
   const handleAvatarChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    await profileService.uploadAvatar(user.id, file)
+    try {
+      await profileService.uploadAvatar(user.id, file)
+    } catch (err) {
+      setError((err as Error).message)
+    }
   }
 
   return (

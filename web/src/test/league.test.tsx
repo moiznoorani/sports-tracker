@@ -48,6 +48,7 @@ function renderLeagues(ctx = makeAuthContext()) {
         <Routes>
           <Route path="/leagues" element={<LeaguesPage />} />
           <Route path="/leagues/new" element={<CreateLeaguePage />} />
+          <Route path="/leagues/:id" element={<div>League Detail</div>} />
         </Routes>
       </MemoryRouter>
     </AuthContext.Provider>
@@ -107,6 +108,17 @@ describe('LeaguesPage', () => {
     renderLeagues()
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Network error')
+    })
+  })
+
+  it('league names link to the detail page', async () => {
+    const mock = await getMockService()
+    mock.getMyLeagues.mockResolvedValue([
+      { id: 'league-1', name: 'Tuesday Ultimate', sport: 'ultimate_frisbee', visibility: 'public' },
+    ])
+    renderLeagues()
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Tuesday Ultimate' })).toHaveAttribute('href', '/leagues/league-1')
     })
   })
 

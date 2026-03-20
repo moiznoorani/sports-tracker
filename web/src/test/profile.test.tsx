@@ -139,6 +139,20 @@ describe('ProfilePage', () => {
   })
 
   // Slice 8: avatar upload
+  it('shows error when avatar upload fails', async () => {
+    const mock = await getMockService()
+    mock.uploadAvatar.mockRejectedValue(new Error('Upload failed'))
+    renderProfile()
+    await waitFor(() => screen.getByLabelText(/upload profile photo/i))
+
+    const file = new File(['img'], 'avatar.png', { type: 'image/png' })
+    await userEvent.upload(screen.getByLabelText(/upload profile photo/i), file)
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Upload failed')
+    })
+  })
+
   it('calls uploadAvatar when a photo file is selected', async () => {
     const mock = await getMockService()
     renderProfile()

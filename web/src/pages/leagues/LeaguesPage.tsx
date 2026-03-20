@@ -24,7 +24,9 @@ export function LeaguesPage() {
       {!error && leagues.length === 0 && <p>No leagues yet. Create one to get started.</p>}
       <ul>
         {leagues.map(league => (
-          <li key={league.id}>{league.name}</li>
+          <li key={league.id}>
+            <Link to={`/leagues/${league.id}`}>{league.name}</Link>
+          </li>
         ))}
       </ul>
     </div>

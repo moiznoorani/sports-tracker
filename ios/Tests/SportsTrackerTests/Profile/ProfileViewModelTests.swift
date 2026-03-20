@@ -72,7 +72,47 @@ struct ProfileViewModelTests {
         #expect(vm.avatarURL == "https://example.com/avatar.png")
     }
 
-    // Slice 6: error on getProfile failure sets errorMessage
+    // Slice 6: error states on update failures
+    @Test func updateDisplayName_setsErrorMessageOnFailure() async {
+        let mock = MockProfileService()
+        mock.stubbedProfile = UserProfile(id: "user-1", displayName: "Old", avatarURL: nil, privacySetting: .private)
+        let vm = ProfileViewModel(service: mock)
+        await vm.loadProfile(userId: "user-1")
+
+        mock.shouldThrow = ProfileError(message: "Network error")
+        await vm.updateDisplayName("New Name")
+
+        #expect(vm.errorMessage != nil)
+        #expect(vm.displayName == "Old") // state not updated on failure
+    }
+
+    @Test func updatePrivacy_setsErrorMessageOnFailure() async {
+        let mock = MockProfileService()
+        mock.stubbedProfile = UserProfile(id: "user-1", displayName: nil, avatarURL: nil, privacySetting: .private)
+        let vm = ProfileViewModel(service: mock)
+        await vm.loadProfile(userId: "user-1")
+
+        mock.shouldThrow = ProfileError(message: "Network error")
+        await vm.updatePrivacy(.public)
+
+        #expect(vm.errorMessage != nil)
+        #expect(vm.privacySetting == .private) // state not updated on failure
+    }
+
+    @Test func uploadAvatar_setsErrorMessageOnFailure() async {
+        let mock = MockProfileService()
+        mock.stubbedProfile = UserProfile(id: "user-1", displayName: nil, avatarURL: nil, privacySetting: .private)
+        let vm = ProfileViewModel(service: mock)
+        await vm.loadProfile(userId: "user-1")
+
+        mock.shouldThrow = ProfileError(message: "Upload failed")
+        await vm.uploadAvatar(data: Data("img".utf8), fileExtension: "png")
+
+        #expect(vm.errorMessage != nil)
+        #expect(vm.avatarURL == nil) // not updated on failure
+    }
+
+    // Slice 7: error on getProfile failure sets errorMessage
     @Test func loadProfile_setsErrorMessageOnFailure() async {
         let mock = MockProfileService()
         mock.shouldThrow = ProfileError(message: "Network error")
