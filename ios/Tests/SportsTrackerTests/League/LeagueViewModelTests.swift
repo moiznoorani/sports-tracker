@@ -221,4 +221,66 @@ struct LeagueViewModelTests {
 
         #expect(vm.errorMessage != nil)
     }
+
+    // MARK: - browseLeagues
+
+    @Test func browseLeagues_exposesPublicLeaguesFromService() async {
+        let mock = MockLeagueService()
+        mock.stubbedPublicLeagues = [
+            PublicLeague(id: "lg-1", name: "Tuesday Ultimate", sport: .ultimateFrisbee, visibility: .public, memberCount: 12),
+            PublicLeague(id: "lg-2", name: "Sunday Hoops", sport: .basketball, visibility: .public, memberCount: 8),
+        ]
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.browseLeagues()
+
+        #expect(vm.publicLeagues.count == 2)
+        #expect(vm.publicLeagues[0].name == "Tuesday Ultimate")
+        #expect(vm.publicLeagues[1].memberCount == 8)
+    }
+
+    @Test func browseLeagues_setsErrorMessageOnFailure() async {
+        let mock = MockLeagueService()
+        mock.shouldThrow = LeagueError(message: "Network error")
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.browseLeagues()
+
+        #expect(vm.errorMessage != nil)
+        #expect(vm.publicLeagues.isEmpty)
+    }
+
+    // MARK: - joinLeague
+
+    @Test func joinLeague_callsServiceWithCorrectLeagueId() async {
+        let mock = MockLeagueService()
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.joinLeague(leagueId: "lg-1")
+
+        #expect(mock.joinLeagueCalled == true)
+        #expect(mock.lastJoinedLeagueId == "lg-1")
+    }
+
+    @Test func joinLeague_reloadsMyLeaguesOnSuccess() async {
+        let mock = MockLeagueService()
+        mock.stubbedLeagues = [
+            League(id: "lg-1", name: "Tuesday Ultimate", sport: .ultimateFrisbee, visibility: .public),
+        ]
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.joinLeague(leagueId: "lg-1")
+
+        #expect(vm.leagues.count == 1)
+    }
+
+    @Test func joinLeague_setsErrorMessageOnFailure() async {
+        let mock = MockLeagueService()
+        mock.shouldThrow = LeagueError(message: "League is not public")
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.joinLeague(leagueId: "lg-private")
+
+        #expect(vm.errorMessage != nil)
+    }
 }

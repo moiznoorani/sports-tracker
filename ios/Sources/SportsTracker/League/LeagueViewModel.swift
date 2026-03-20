@@ -23,6 +23,9 @@ public final class LeagueViewModel {
     // Members
     public var members: [LeagueMember] = []
 
+    // Browse
+    public var publicLeagues: [PublicLeague] = []
+
     private let service: LeagueServiceProtocol
 
     public init(service: LeagueServiceProtocol = LeagueService(client: .shared)) {
@@ -74,6 +77,25 @@ public final class LeagueViewModel {
         do {
             try await service.removeMember(leagueId: leagueId, userId: userId)
             await loadMembers(leagueId: leagueId)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    public func browseLeagues() async {
+        errorMessage = nil
+        do {
+            publicLeagues = try await service.browseLeagues()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    public func joinLeague(leagueId: String) async {
+        errorMessage = nil
+        do {
+            try await service.joinLeague(leagueId: leagueId)
+            await loadLeagues()
         } catch {
             errorMessage = error.localizedDescription
         }

@@ -13,6 +13,16 @@ export interface League {
   invite_token?: string
 }
 
+export interface PublicLeague {
+  id: string
+  name: string
+  sport: Sport
+  visibility: Visibility
+  lat?: number | null
+  lng?: number | null
+  member_count: number
+}
+
 export interface Member {
   user_id: string
   role: 'organizer' | 'member'
@@ -65,6 +75,20 @@ export const leagueService = {
       .delete()
       .eq('league_id', leagueId)
       .eq('user_id', userId)
+    if (error) throw error
+  },
+
+  async browseLeagues(): Promise<PublicLeague[]> {
+    const { data, error } = await supabase
+      .from('public_leagues')
+      .select('id, name, sport, visibility, lat, lng, member_count')
+      .order('name')
+    if (error) throw error
+    return data ?? []
+  },
+
+  async joinLeague(leagueId: string): Promise<void> {
+    const { error } = await supabase.rpc('join_league', { p_league_id: leagueId })
     if (error) throw error
   },
 

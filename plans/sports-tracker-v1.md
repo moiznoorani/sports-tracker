@@ -75,13 +75,17 @@ An Organizer can create a League, choose private (invite-only) or public visibil
 - [ ] Organizer can remove a Player from the League
 - [ ] Removed Player loses access to League content
 - [ ] League list on home screen shows all Leagues the current User belongs to
-- [ ] RLS policy: League content is only visible to members
+- [ ] RLS policy: private League content is only visible to members; public Leagues are readable by any authenticated user
+- [ ] User can browse all public Leagues (name, sport, member count) — issue #58
+- [ ] User can join a public League with one click (no token required) — issue #58
+- [ ] Already-joined public Leagues show "You're in this league" indicator — issue #58
 
 ### UI acceptance criteria
 - League list uses glass card rows with sport + visibility `GlassTag` badges; empty state with icon + CTA button
 - League detail shows header card with name, sport/visibility tags, and invite link in monospace glass container with copy button
 - Create League and Join League use glass card forms; navigation uses back chevron link
 - Member list (issue #8) uses glass card rows with avatar initials; remove action uses destructive button style
+- Browse page (issue #58): glass card rows with name, sport tag, member count; "Joined" accent badge or "Join" glass button per row; empty state if no public leagues
 
 ---
 

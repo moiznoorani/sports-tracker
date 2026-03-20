@@ -50,6 +50,31 @@ public struct League: Codable, Identifiable, Sendable {
     }
 }
 
+public struct PublicLeague: Codable, Identifiable, Sendable {
+    public let id: String
+    public let name: String
+    public let sport: Sport
+    public let visibility: Visibility
+    public let lat: Double?
+    public let lng: Double?
+    public let memberCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, sport, visibility, lat, lng
+        case memberCount = "member_count"
+    }
+
+    public init(id: String, name: String, sport: Sport, visibility: Visibility, lat: Double? = nil, lng: Double? = nil, memberCount: Int) {
+        self.id = id
+        self.name = name
+        self.sport = sport
+        self.visibility = visibility
+        self.lat = lat
+        self.lng = lng
+        self.memberCount = memberCount
+    }
+}
+
 public struct LeagueMember: Codable, Sendable {
     public let userId: String
     public let role: String
@@ -80,6 +105,8 @@ public protocol LeagueServiceProtocol: Sendable {
     func removeMember(leagueId: String, userId: String) async throws
     func createLeague(name: String, sport: Sport, visibility: Visibility, lat: Double?, lng: Double?) async throws -> League
     func joinByToken(_ token: String) async throws
+    func browseLeagues() async throws -> [PublicLeague]
+    func joinLeague(leagueId: String) async throws
 }
 
 public final class LeagueService: LeagueServiceProtocol {
@@ -122,6 +149,19 @@ public final class LeagueService: LeagueServiceProtocol {
 
     public func joinByToken(_ token: String) async throws {
         try await client.rpc("join_league_by_token", params: ["p_token": token])
+            .execute()
+    }
+
+    public func browseLeagues() async throws -> [PublicLeague] {
+        try await client.from("public_leagues")
+            .select("id, name, sport, visibility, lat, lng, member_count")
+            .order("name")
+            .execute()
+            .value
+    }
+
+    public func joinLeague(leagueId: String) async throws {
+        try await client.rpc("join_league", params: ["p_league_id": leagueId])
             .execute()
     }
 

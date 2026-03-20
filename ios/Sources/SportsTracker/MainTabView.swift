@@ -19,6 +19,10 @@ public struct MainTabView: View {
                 LeaguesView(vm: leagueVM, userId: userId)
             }
 
+            Tab("Browse", systemImage: "magnifyingglass") {
+                BrowseLeaguesView(vm: leagueVM, currentUserId: userId)
+            }
+
             Tab("Profile", systemImage: "person.circle") {
                 NavigationStack {
                     ProfileView(vm: profileVM, userId: userId)

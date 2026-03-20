@@ -4,12 +4,15 @@ final class MockLeagueService: LeagueServiceProtocol, @unchecked Sendable {
     var stubbedLeagues: [League] = []
     var stubbedLeague: League? = nil
     var stubbedMembers: [LeagueMember] = []
+    var stubbedPublicLeagues: [PublicLeague] = []
     var shouldThrow: Error? = nil
 
     var createLeagueCalled = false
     var loadLeaguesCalled = false
     var joinByTokenCalled = false
     var removeMemberCalled = false
+    var browseLeaguesCalled = false
+    var joinLeagueCalled = false
 
     var lastJoinToken: String?
     var lastCreatedName: String?
@@ -17,6 +20,7 @@ final class MockLeagueService: LeagueServiceProtocol, @unchecked Sendable {
     var lastCreatedVisibility: Visibility?
     var lastRemovedLeagueId: String?
     var lastRemovedUserId: String?
+    var lastJoinedLeagueId: String?
 
     func getMyLeagues() async throws -> [League] {
         loadLeaguesCalled = true
@@ -55,6 +59,18 @@ final class MockLeagueService: LeagueServiceProtocol, @unchecked Sendable {
     func joinByToken(_ token: String) async throws {
         joinByTokenCalled = true
         lastJoinToken = token
+        if let error = shouldThrow { throw error }
+    }
+
+    func browseLeagues() async throws -> [PublicLeague] {
+        browseLeaguesCalled = true
+        if let error = shouldThrow { throw error }
+        return stubbedPublicLeagues
+    }
+
+    func joinLeague(leagueId: String) async throws {
+        joinLeagueCalled = true
+        lastJoinedLeagueId = leagueId
         if let error = shouldThrow { throw error }
     }
 }
