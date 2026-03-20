@@ -157,4 +157,130 @@ struct LeagueViewModelTests {
         #expect(vm.errorMessage != nil)
         #expect(vm.joinSuccess == false)
     }
+
+    // MARK: - loadMembers
+
+    @Test func loadMembers_exposesMembersFromService() async {
+        let mock = MockLeagueService()
+        mock.stubbedMembers = [
+            LeagueMember(userId: "u1", role: "organizer", displayName: "Alice", avatarUrl: nil),
+            LeagueMember(userId: "u2", role: "member", displayName: "Bob", avatarUrl: nil),
+        ]
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.loadMembers(leagueId: "league-1")
+
+        #expect(vm.members.count == 2)
+        #expect(vm.members[0].displayName == "Alice")
+        #expect(vm.members[1].displayName == "Bob")
+    }
+
+    @Test func loadMembers_setsErrorMessageOnFailure() async {
+        let mock = MockLeagueService()
+        mock.shouldThrow = LeagueError(message: "Not authorized")
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.loadMembers(leagueId: "league-1")
+
+        #expect(vm.errorMessage != nil)
+        #expect(vm.members.isEmpty)
+    }
+
+    // MARK: - removeMember
+
+    @Test func removeMember_callsServiceWithCorrectArgs() async {
+        let mock = MockLeagueService()
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.removeMember(leagueId: "league-1", userId: "user-bob")
+
+        #expect(mock.removeMemberCalled == true)
+        #expect(mock.lastRemovedLeagueId == "league-1")
+        #expect(mock.lastRemovedUserId == "user-bob")
+    }
+
+    @Test func removeMember_reloadsMembersOnSuccess() async {
+        let mock = MockLeagueService()
+        mock.stubbedMembers = [
+            LeagueMember(userId: "u1", role: "organizer", displayName: "Alice", avatarUrl: nil),
+        ]
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.removeMember(leagueId: "league-1", userId: "user-bob")
+
+        #expect(vm.members.count == 1)
+        #expect(vm.members[0].displayName == "Alice")
+    }
+
+    @Test func removeMember_setsErrorMessageOnFailure() async {
+        let mock = MockLeagueService()
+        mock.shouldThrow = LeagueError(message: "Not authorized")
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.removeMember(leagueId: "league-1", userId: "user-bob")
+
+        #expect(vm.errorMessage != nil)
+    }
+
+    // MARK: - browseLeagues
+
+    @Test func browseLeagues_exposesPublicLeaguesFromService() async {
+        let mock = MockLeagueService()
+        mock.stubbedPublicLeagues = [
+            PublicLeague(id: "lg-1", name: "Tuesday Ultimate", sport: .ultimateFrisbee, visibility: .public, memberCount: 12),
+            PublicLeague(id: "lg-2", name: "Sunday Hoops", sport: .basketball, visibility: .public, memberCount: 8),
+        ]
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.browseLeagues()
+
+        #expect(vm.publicLeagues.count == 2)
+        #expect(vm.publicLeagues[0].name == "Tuesday Ultimate")
+        #expect(vm.publicLeagues[1].memberCount == 8)
+    }
+
+    @Test func browseLeagues_setsErrorMessageOnFailure() async {
+        let mock = MockLeagueService()
+        mock.shouldThrow = LeagueError(message: "Network error")
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.browseLeagues()
+
+        #expect(vm.errorMessage != nil)
+        #expect(vm.publicLeagues.isEmpty)
+    }
+
+    // MARK: - joinLeague
+
+    @Test func joinLeague_callsServiceWithCorrectLeagueId() async {
+        let mock = MockLeagueService()
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.joinLeague(leagueId: "lg-1")
+
+        #expect(mock.joinLeagueCalled == true)
+        #expect(mock.lastJoinedLeagueId == "lg-1")
+    }
+
+    @Test func joinLeague_reloadsMyLeaguesOnSuccess() async {
+        let mock = MockLeagueService()
+        mock.stubbedLeagues = [
+            League(id: "lg-1", name: "Tuesday Ultimate", sport: .ultimateFrisbee, visibility: .public),
+        ]
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.joinLeague(leagueId: "lg-1")
+
+        #expect(vm.leagues.count == 1)
+    }
+
+    @Test func joinLeague_setsErrorMessageOnFailure() async {
+        let mock = MockLeagueService()
+        mock.shouldThrow = LeagueError(message: "League is not public")
+        let vm = LeagueViewModel(service: mock)
+
+        await vm.joinLeague(leagueId: "lg-private")
+
+        #expect(vm.errorMessage != nil)
+    }
 }

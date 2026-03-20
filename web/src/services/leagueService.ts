@@ -13,6 +13,23 @@ export interface League {
   invite_token?: string
 }
 
+export interface PublicLeague {
+  id: string
+  name: string
+  sport: Sport
+  visibility: Visibility
+  lat?: number | null
+  lng?: number | null
+  member_count: number
+}
+
+export interface Member {
+  user_id: string
+  role: 'organizer' | 'member'
+  display_name: string | null
+  avatar_url: string | null
+}
+
 export interface CreateLeagueParams {
   name: string
   sport: Sport
@@ -24,11 +41,10 @@ export interface CreateLeagueParams {
 export const leagueService = {
   async getMyLeagues(): Promise<League[]> {
     const { data, error } = await supabase
-      .from('leagues')
-      .select('id, name, sport, visibility, lat, lng')
-      .order('created_at', { ascending: false })
+      .from('league_members')
+      .select('leagues(id, name, sport, visibility, lat, lng)')
     if (error) throw error
-    return data ?? []
+    return (data ?? []).map(row => row.leagues).filter(Boolean) as League[]
   },
 
   async getLeague(id: string): Promise<League> {
@@ -43,6 +59,35 @@ export const leagueService = {
 
   async joinByToken(token: string): Promise<void> {
     const { error } = await supabase.rpc('join_league_by_token', { p_token: token })
+    if (error) throw error
+  },
+
+  async getMembers(leagueId: string): Promise<Member[]> {
+    const { data, error } = await supabase.rpc('get_league_members', { p_league_id: leagueId })
+    if (error) throw error
+    return data ?? []
+  },
+
+  async removeMember(leagueId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('league_members')
+      .delete()
+      .eq('league_id', leagueId)
+      .eq('user_id', userId)
+    if (error) throw error
+  },
+
+  async browseLeagues(): Promise<PublicLeague[]> {
+    const { data, error } = await supabase
+      .from('public_leagues')
+      .select('id, name, sport, visibility, lat, lng, member_count')
+      .order('name')
+    if (error) throw error
+    return data ?? []
+  },
+
+  async joinLeague(leagueId: string): Promise<void> {
+    const { error } = await supabase.rpc('join_league', { p_league_id: leagueId })
     if (error) throw error
   },
 

@@ -53,9 +53,9 @@ A cross-platform sports management and stat-tracking app with:
 
 ### League Management
 8. As an Organizer, I want to create a League with a name and sport, so that I can group my Tournaments under one community.
-9. As an Organizer, I want to set my League as private (invite-only) or public (discoverable by location), so that I control who can find and join it.
+9. As an Organizer, I want to set my League as private (invite-only) or public (discoverable to all authenticated users), so that I control who can find and join it.
 10. As an Organizer, I want to generate an invite link for my private League, so that I can share it directly with Players.
-11. As a User, I want to browse public Leagues near my location, so that I can find and join a community to play in.
+11. As a User, I want to browse all public Leagues and join one with a single tap, so that I can find and join a community to play in. _(Geo-based filtering is deferred to V2.)_
 12. As a User, I want to join a League via an invite link, so that I can participate in private Leagues I've been invited to.
 13. As an Organizer, I want to view all Players who have joined my League, so that I can assign them to Teams.
 14. As an Organizer, I want to remove a Player from my League, so that I can manage membership.

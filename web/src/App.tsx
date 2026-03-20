@@ -11,6 +11,7 @@ import { LeaguesPage } from './pages/leagues/LeaguesPage'
 import { CreateLeaguePage } from './pages/leagues/CreateLeaguePage'
 import { LeagueDetailPage } from './pages/leagues/LeagueDetailPage'
 import { JoinLeaguePage } from './pages/leagues/JoinLeaguePage'
+import { BrowseLeaguesPage } from './pages/leagues/BrowseLeaguesPage'
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
             <Route element={<AppShell><Navigate to="/leagues" replace /></AppShell>} path="/" />
             <Route path="/profile" element={<AppShell><ProfilePage /></AppShell>} />
             <Route path="/leagues" element={<AppShell><LeaguesPage /></AppShell>} />
+            <Route path="/leagues/browse" element={<AppShell><BrowseLeaguesPage /></AppShell>} />
             <Route path="/leagues/new" element={<AppShell><CreateLeaguePage /></AppShell>} />
             <Route path="/leagues/join/:token" element={<AppShell><JoinLeaguePage /></AppShell>} />
             <Route path="/leagues/:id" element={<AppShell><LeagueDetailPage /></AppShell>} />

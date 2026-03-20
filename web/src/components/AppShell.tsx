@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 const navItems = [
   { to: '/leagues', label: 'Leagues', icon: '⬡' },
+  { to: '/leagues/browse', label: 'Browse', icon: '⊕' },
   { to: '/profile', label: 'Profile', icon: '◎' },
 ]
 

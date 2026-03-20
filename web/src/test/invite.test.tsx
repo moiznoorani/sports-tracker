@@ -32,6 +32,8 @@ vi.mock('../services/leagueService', () => ({
     getMyLeagues: vi.fn(),
     createLeague: vi.fn(),
     getLeague: vi.fn(),
+    getMembers: vi.fn(),
+    removeMember: vi.fn(),
     joinByToken: vi.fn(),
   },
 }))
@@ -42,6 +44,8 @@ async function getMockService() {
     getMyLeagues: ReturnType<typeof vi.fn>
     createLeague: ReturnType<typeof vi.fn>
     getLeague: ReturnType<typeof vi.fn>
+    getMembers: ReturnType<typeof vi.fn>
+    removeMember: ReturnType<typeof vi.fn>
     joinByToken: ReturnType<typeof vi.fn>
   }
 }
@@ -87,6 +91,9 @@ describe('LeagueDetailPage', () => {
     vi.clearAllMocks()
     const mock = await getMockService()
     mock.getLeague.mockResolvedValue(fakeLeague)
+    mock.getMembers.mockResolvedValue([
+      { user_id: 'user-123', role: 'organizer', display_name: 'Me', avatar_url: null },
+    ])
     mock.getMyLeagues.mockResolvedValue([])
   })
 
