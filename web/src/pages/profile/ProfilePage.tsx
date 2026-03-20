@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef, type FormEvent, type ChangeEvent } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { profileService } from '../../services/profileService'
+import { GlassCard } from '../../components/ui/GlassCard'
+import { GlassInput } from '../../components/ui/GlassInput'
+import { GlassSelect } from '../../components/ui/GlassSelect'
+import { Button } from '../../components/ui/Button'
 
 export function ProfilePage() {
   const { user } = useAuth()
@@ -39,41 +43,88 @@ export function ProfilePage() {
   const handleAvatarChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    await profileService.uploadAvatar(user.id, file)
+    try {
+      await profileService.uploadAvatar(user.id, file)
+    } catch (err) {
+      setError((err as Error).message)
+    }
   }
 
   return (
-    <div>
-      <h1>Profile</h1>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        aria-label="Upload profile photo"
-        style={{ display: 'none' }}
-        onChange={handleAvatarChange}
-      />
-      <form onSubmit={handleSave}>
-        <div>
-          <label htmlFor="displayName">Display name</label>
+    <div className="max-w-lg mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Profile</h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-subtle)' }}>Manage your account settings</p>
+      </div>
+
+      {/* Avatar */}
+      <GlassCard className="mb-4" padding="p-5">
+        <div className="flex items-center gap-4">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg, #7B3F85, #9B5AA6)' }}
+          >
+            <span className="text-white text-xl font-bold">
+              {displayName ? displayName[0].toUpperCase() : user?.email?.[0]?.toUpperCase() ?? '?'}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{displayName || 'No display name'}</p>
+            <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-subtle)' }}>{user?.email}</p>
+          </div>
           <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            aria-label="Upload profile photo"
+            style={{ display: 'none' }}
+            onChange={handleAvatarChange}
+          />
+          <Button variant="glass" size="sm" onClick={() => fileRef.current?.click()}>
+            Change
+          </Button>
+        </div>
+      </GlassCard>
+
+      <GlassCard padding="p-6">
+        <form onSubmit={handleSave} className="flex flex-col gap-5">
+          <GlassInput
             id="displayName"
+            label="Display Name"
             type="text"
             value={displayName}
             onChange={e => setDisplayName(e.target.value)}
+            placeholder="How others see you"
           />
-        </div>
-        <div>
-          <label htmlFor="privacy">Profile visibility</label>
-          <select id="privacy" value={privacy} onChange={e => setPrivacy(e.target.value as 'private' | 'public')}>
-            <option value="private">Private</option>
-            <option value="public">Public</option>
-          </select>
-        </div>
-        {error && <p role="alert">{error}</p>}
-        {saved && <p role="status">Saved</p>}
-        <button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
-      </form>
+
+          <GlassSelect
+            id="privacy"
+            label="Profile Visibility"
+            value={privacy}
+            onChange={e => setPrivacy(e.target.value as 'private' | 'public')}
+            options={[
+              { value: 'private', label: 'Private' },
+              { value: 'public', label: 'Public' },
+            ]}
+          />
+
+          {error && (
+            <p role="alert" className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
+              {error}
+            </p>
+          )}
+
+          {saved && (
+            <p role="status" className="text-xs px-3 py-2 rounded-lg text-center" style={{ background: 'rgba(52,168,83,0.1)', color: '#4ade80' }}>
+              Saved
+            </p>
+          )}
+
+          <Button type="submit" fullWidth loading={saving} disabled={saving}>
+            Save changes
+          </Button>
+        </form>
+      </GlassCard>
     </div>
   )
 }
