@@ -50,9 +50,34 @@ public struct League: Codable, Identifiable, Sendable {
     }
 }
 
+public struct LeagueMember: Codable, Sendable {
+    public let userId: String
+    public let role: String
+    public let displayName: String?
+    public let avatarUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case role
+        case displayName = "display_name"
+        case avatarUrl = "avatar_url"
+    }
+
+    public init(userId: String, role: String, displayName: String?, avatarUrl: String?) {
+        self.userId = userId
+        self.role = role
+        self.displayName = displayName
+        self.avatarUrl = avatarUrl
+    }
+
+    public var isOrganizer: Bool { role == "organizer" }
+}
+
 public protocol LeagueServiceProtocol: Sendable {
     func getMyLeagues() async throws -> [League]
     func getLeague(id: String) async throws -> League
+    func getMembers(leagueId: String) async throws -> [LeagueMember]
+    func removeMember(leagueId: String, userId: String) async throws
     func createLeague(name: String, sport: Sport, visibility: Visibility, lat: Double?, lng: Double?) async throws -> League
     func joinByToken(_ token: String) async throws
 }
@@ -79,6 +104,20 @@ public final class LeagueService: LeagueServiceProtocol {
             .single()
             .execute()
             .value
+    }
+
+    public func getMembers(leagueId: String) async throws -> [LeagueMember] {
+        try await client.rpc("get_league_members", params: ["p_league_id": leagueId])
+            .execute()
+            .value
+    }
+
+    public func removeMember(leagueId: String, userId: String) async throws {
+        try await client.from("league_members")
+            .delete()
+            .eq("league_id", value: leagueId)
+            .eq("user_id", value: userId)
+            .execute()
     }
 
     public func joinByToken(_ token: String) async throws {

@@ -3,16 +3,20 @@
 final class MockLeagueService: LeagueServiceProtocol, @unchecked Sendable {
     var stubbedLeagues: [League] = []
     var stubbedLeague: League? = nil
+    var stubbedMembers: [LeagueMember] = []
     var shouldThrow: Error? = nil
 
     var createLeagueCalled = false
     var loadLeaguesCalled = false
     var joinByTokenCalled = false
-    var lastJoinToken: String?
+    var removeMemberCalled = false
 
+    var lastJoinToken: String?
     var lastCreatedName: String?
     var lastCreatedSport: Sport?
     var lastCreatedVisibility: Visibility?
+    var lastRemovedLeagueId: String?
+    var lastRemovedUserId: String?
 
     func getMyLeagues() async throws -> [League] {
         loadLeaguesCalled = true
@@ -23,6 +27,18 @@ final class MockLeagueService: LeagueServiceProtocol, @unchecked Sendable {
     func getLeague(id: String) async throws -> League {
         if let error = shouldThrow { throw error }
         return stubbedLeague ?? League(id: id, name: "Test League", sport: .ultimateFrisbee, visibility: .private, inviteToken: "test-token")
+    }
+
+    func getMembers(leagueId: String) async throws -> [LeagueMember] {
+        if let error = shouldThrow { throw error }
+        return stubbedMembers
+    }
+
+    func removeMember(leagueId: String, userId: String) async throws {
+        removeMemberCalled = true
+        lastRemovedLeagueId = leagueId
+        lastRemovedUserId = userId
+        if let error = shouldThrow { throw error }
     }
 
     func createLeague(name: String, sport: Sport, visibility: Visibility, lat: Double?, lng: Double?) async throws -> League {

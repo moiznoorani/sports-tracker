@@ -3,11 +3,17 @@ import SwiftUI
 public struct LeagueDetailView: View {
     @Bindable var vm: LeagueViewModel
     let leagueId: String
+    let currentUserId: String
     @State private var copied = false
 
-    public init(vm: LeagueViewModel, leagueId: String) {
+    public init(vm: LeagueViewModel, leagueId: String, currentUserId: String = "") {
         self.vm = vm
         self.leagueId = leagueId
+        self.currentUserId = currentUserId
+    }
+
+    private var isOrganizer: Bool {
+        vm.members.first(where: { $0.userId == currentUserId })?.isOrganizer ?? false
     }
 
     public var body: some View {
@@ -31,7 +37,10 @@ public struct LeagueDetailView: View {
                     .background(AppTheme.backgroundGradient.ignoresSafeArea())
             }
         }
-        .task { await vm.loadLeague(id: leagueId) }
+        .task {
+            await vm.loadLeague(id: leagueId)
+            await vm.loadMembers(leagueId: leagueId)
+        }
     }
 
     private func leagueDetail(_ league: League) -> some View {
@@ -67,46 +76,11 @@ public struct LeagueDetailView: View {
 
                 // Invite link card
                 if let token = league.inviteToken {
-                    GlassCard {
-                        VStack(alignment: .leading, spacing: 14) {
-                            Text("INVITE LINK")
-                                .font(.system(size: 11, weight: .semibold))
-                                .tracking(1.2)
-                                .foregroundStyle(AppTheme.subtleText)
-
-                            let link = inviteLink(token: token)
-                            Text(link)
-                                .font(.system(size: 12, design: .monospaced))
-                                .foregroundStyle(AppTheme.secondaryText)
-                                .lineLimit(2)
-                                .textSelection(.enabled)
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background {
-                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .fill(Color.white.opacity(0.04))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
-                                        )
-                                }
-
-                            Button(copied ? "✓ Copied!" : "Copy Link") {
-                                #if os(iOS)
-                                UIPasteboard.general.string = link
-                                #endif
-                                copied = true
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false }
-                            }
-                            .buttonStyle(GlassButtonStyle())
-
-                            Text("Share this link to invite players to join your league.")
-                                .font(.caption)
-                                .foregroundStyle(AppTheme.subtleText)
-                        }
-                        .padding(18)
-                    }
+                    inviteLinkCard(token: token)
                 }
+
+                // Members card
+                membersCard
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
@@ -116,6 +90,107 @@ public struct LeagueDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .background(AppTheme.backgroundGradient.ignoresSafeArea())
+    }
+
+    private func inviteLinkCard(token: String) -> some View {
+        let link = inviteLink(token: token)
+        return GlassCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("INVITE LINK")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(1.2)
+                    .foregroundStyle(AppTheme.subtleText)
+
+                Text(link)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(AppTheme.secondaryText)
+                    .lineLimit(2)
+                    .textSelection(.enabled)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color.white.opacity(0.04))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                            )
+                    }
+
+                Button(copied ? "✓ Copied!" : "Copy Link") {
+                    #if os(iOS)
+                    UIPasteboard.general.string = link
+                    #endif
+                    copied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false }
+                }
+                .buttonStyle(GlassButtonStyle())
+
+                Text("Share this link to invite players to join your league.")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.subtleText)
+            }
+            .padding(18)
+        }
+    }
+
+    private var membersCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("MEMBERS · \(vm.members.count)")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(1.2)
+                    .foregroundStyle(AppTheme.subtleText)
+
+                ForEach(vm.members, id: \.userId) { member in
+                    HStack(spacing: 12) {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(AppTheme.accent.opacity(0.2))
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                Text(String((member.displayName ?? "?").prefix(1)).uppercased())
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(AppTheme.accentLight)
+                            )
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(member.displayName ?? "Unknown")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(AppTheme.primaryText)
+                                .lineLimit(1)
+                            if member.isOrganizer {
+                                Text("Organizer")
+                                    .font(.caption2)
+                                    .foregroundStyle(AppTheme.accentLight)
+                            }
+                        }
+
+                        Spacer()
+
+                        if isOrganizer && !member.isOrganizer {
+                            Button("Remove") {
+                                Task {
+                                    await vm.removeMember(
+                                        leagueId: leagueId,
+                                        userId: member.userId
+                                    )
+                                }
+                            }
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(AppTheme.errorColor)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background {
+                                Capsule()
+                                    .fill(AppTheme.errorColor.opacity(0.12))
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(18)
+        }
     }
 
     private func inviteLink(token: String) -> String {

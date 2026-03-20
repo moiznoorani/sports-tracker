@@ -13,6 +13,13 @@ export interface League {
   invite_token?: string
 }
 
+export interface Member {
+  user_id: string
+  role: 'organizer' | 'member'
+  display_name: string | null
+  avatar_url: string | null
+}
+
 export interface CreateLeagueParams {
   name: string
   sport: Sport
@@ -43,6 +50,21 @@ export const leagueService = {
 
   async joinByToken(token: string): Promise<void> {
     const { error } = await supabase.rpc('join_league_by_token', { p_token: token })
+    if (error) throw error
+  },
+
+  async getMembers(leagueId: string): Promise<Member[]> {
+    const { data, error } = await supabase.rpc('get_league_members', { p_league_id: leagueId })
+    if (error) throw error
+    return data ?? []
+  },
+
+  async removeMember(leagueId: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('league_members')
+      .delete()
+      .eq('league_id', leagueId)
+      .eq('user_id', userId)
     if (error) throw error
   },
 

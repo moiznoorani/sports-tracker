@@ -16,7 +16,7 @@ public struct MainTabView: View {
     public var body: some View {
         TabView {
             Tab("Leagues", systemImage: "sportscourt") {
-                LeaguesView(vm: leagueVM)
+                LeaguesView(vm: leagueVM, userId: userId)
             }
 
             Tab("Profile", systemImage: "person.circle") {

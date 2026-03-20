@@ -20,6 +20,9 @@ public final class LeagueViewModel {
     public var joinToken: String = ""
     public var joinSuccess = false
 
+    // Members
+    public var members: [LeagueMember] = []
+
     private let service: LeagueServiceProtocol
 
     public init(service: LeagueServiceProtocol = LeagueService(client: .shared)) {
@@ -52,6 +55,25 @@ public final class LeagueViewModel {
             try await service.joinByToken(joinToken)
             joinSuccess = true
             await loadLeagues()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    public func loadMembers(leagueId: String) async {
+        errorMessage = nil
+        do {
+            members = try await service.getMembers(leagueId: leagueId)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    public func removeMember(leagueId: String, userId: String) async {
+        errorMessage = nil
+        do {
+            try await service.removeMember(leagueId: leagueId, userId: userId)
+            await loadMembers(leagueId: leagueId)
         } catch {
             errorMessage = error.localizedDescription
         }

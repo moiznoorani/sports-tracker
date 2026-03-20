@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { leagueService, type League } from '../../services/leagueService'
+import { useAuth } from '../../context/AuthContext'
+import { leagueService, type League, type Member } from '../../services/leagueService'
 import { GlassCard } from '../../components/ui/GlassCard'
 import { Button } from '../../components/ui/Button'
 
@@ -11,17 +12,39 @@ const SPORT_LABELS: Record<string, string> = {
 
 export function LeagueDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
   const [league, setLeague] = useState<League | null>(null)
+  const [members, setMembers] = useState<Member[]>([])
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const loadData = async (leagueId: string) => {
+    try {
+      const [l, m] = await Promise.all([
+        leagueService.getLeague(leagueId),
+        leagueService.getMembers(leagueId),
+      ])
+      setLeague(l)
+      setMembers(m)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   useEffect(() => {
     if (!id) return
-    leagueService.getLeague(id)
-      .then(setLeague)
-      .catch(e => setError(e.message))
+    loadData(id)
   }, [id])
+
+  const isOrganizer = members.some(m => m.user_id === user?.id && m.role === 'organizer')
+
+  const handleRemove = async (userId: string) => {
+    if (!id) return
+    await leagueService.removeMember(id, userId)
+    const updated = await leagueService.getMembers(id)
+    setMembers(updated)
+  }
 
   if (error) return (
     <div className="max-w-2xl mx-auto">
@@ -71,7 +94,8 @@ export function LeagueDetailPage() {
         </div>
       </div>
 
-      <GlassCard padding="p-5">
+      {/* Invite link */}
+      <GlassCard padding="p-5" className="mb-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-subtle)' }}>Invite Link</h2>
         <div className="flex gap-2">
           <input
@@ -91,9 +115,44 @@ export function LeagueDetailPage() {
             {copied ? '✓ Copied' : 'Copy'}
           </Button>
         </div>
-        <p className="text-xs mt-3" style={{ color: 'var(--text-subtle)' }}>
-          Share this link to invite players to join your league.
-        </p>
+      </GlassCard>
+
+      {/* Members */}
+      <GlassCard padding="p-5">
+        <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-subtle)' }}>
+          Members · {members.length}
+        </h2>
+        <ul className="flex flex-col gap-2">
+          {members.map(member => (
+            <li key={member.user_id} className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-sm font-bold"
+                style={{ background: 'rgba(123,63,133,0.2)', color: 'var(--accent-light)' }}
+              >
+                {(member.display_name ?? '?')[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                  {member.display_name ?? 'Unknown'}
+                </p>
+                {member.role === 'organizer' && (
+                  <span className="text-xs" style={{ color: 'var(--accent-light)' }}>Organizer</span>
+                )}
+              </div>
+              {isOrganizer && member.role !== 'organizer' && (
+                <button
+                  type="button"
+                  aria-label={`Remove ${member.display_name ?? 'member'}`}
+                  onClick={() => handleRemove(member.user_id)}
+                  className="text-xs px-3 py-1.5 rounded-lg transition-opacity hover:opacity-70"
+                  style={{ color: '#f87171', background: 'rgba(248,113,113,0.1)' }}
+                >
+                  Remove
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
       </GlassCard>
     </div>
   )
