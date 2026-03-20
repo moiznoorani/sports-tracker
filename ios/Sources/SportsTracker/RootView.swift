@@ -10,10 +10,16 @@ public struct RootView: View {
     public var body: some View {
         switch authVM.state {
         case .loading:
-            ProgressView()
-                .task { await authVM.loadSession() }
+            ZStack {
+                AppTheme.backgroundGradient.ignoresSafeArea()
+                ProgressView()
+                    .tint(AppTheme.accentLight)
+            }
+            .task { await authVM.loadSession() }
         case .unauthenticated:
-            SignInView(vm: authVM)
+            NavigationStack {
+                SignInView(vm: authVM)
+            }
         case .authenticated(let session):
             MainTabView(
                 authVM: authVM,

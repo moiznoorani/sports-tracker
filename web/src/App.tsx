@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ProtectedRoute } from './routes/ProtectedRoute'
+import { AppShell } from './components/AppShell'
 import { SignUpPage } from './pages/auth/SignUpPage'
 import { SignInPage } from './pages/auth/SignInPage'
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage'
@@ -10,10 +11,6 @@ import { LeaguesPage } from './pages/leagues/LeaguesPage'
 import { CreateLeaguePage } from './pages/leagues/CreateLeaguePage'
 import { LeagueDetailPage } from './pages/leagues/LeagueDetailPage'
 import { JoinLeaguePage } from './pages/leagues/JoinLeaguePage'
-
-function Dashboard() {
-  return <h1>Dashboard</h1>
-}
 
 export default function App() {
   return (
@@ -26,14 +23,14 @@ export default function App() {
           <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/update-password" element={<UpdatePasswordPage />} />
 
-          {/* Protected routes */}
+          {/* Protected routes wrapped in AppShell */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/leagues" element={<LeaguesPage />} />
-            <Route path="/leagues/new" element={<CreateLeaguePage />} />
-            <Route path="/leagues/join/:token" element={<JoinLeaguePage />} />
-            <Route path="/leagues/:id" element={<LeagueDetailPage />} />
+            <Route element={<AppShell><Navigate to="/leagues" replace /></AppShell>} path="/" />
+            <Route path="/profile" element={<AppShell><ProfilePage /></AppShell>} />
+            <Route path="/leagues" element={<AppShell><LeaguesPage /></AppShell>} />
+            <Route path="/leagues/new" element={<AppShell><CreateLeaguePage /></AppShell>} />
+            <Route path="/leagues/join/:token" element={<AppShell><JoinLeaguePage /></AppShell>} />
+            <Route path="/leagues/:id" element={<AppShell><LeagueDetailPage /></AppShell>} />
           </Route>
 
           {/* Catch-all */}

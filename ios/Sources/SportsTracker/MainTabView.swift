@@ -27,14 +27,36 @@ public struct MainTabView: View {
 
             Tab("Settings", systemImage: "gearshape") {
                 NavigationStack {
-                    List {
-                        Button("Sign Out", role: .destructive) {
-                            Task { await authVM.signOut() }
+                    ZStack {
+                        AppTheme.backgroundGradient.ignoresSafeArea()
+                        VStack(spacing: 16) {
+                            Spacer()
+                            GlassCard {
+                                Button(role: .destructive) {
+                                    Task { await authVM.signOut() }
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "arrow.right.square")
+                                        Text("Sign Out")
+                                    }
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(AppTheme.errorColor)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 4)
+                                }
+                                .padding(20)
+                            }
+                            .padding(.horizontal, 20)
+                            Spacer()
                         }
                     }
                     .navigationTitle("Settings")
+                    #if os(iOS)
+                    .navigationBarTitleDisplayMode(.large)
+                    #endif
                 }
             }
         }
+        .tint(AppTheme.accentLight)
     }
 }

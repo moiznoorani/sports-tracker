@@ -87,7 +87,7 @@ describe('ProfilePage', () => {
 
     await userEvent.clear(screen.getByLabelText(/display name/i))
     await userEvent.type(screen.getByLabelText(/display name/i), 'New Name')
-    await userEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /save changes/i }))
 
     await waitFor(() => {
       expect(mock.updateProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({ display_name: 'New Name' }))
@@ -109,7 +109,7 @@ describe('ProfilePage', () => {
     await waitFor(() => screen.getByDisplayValue('Private'))
 
     await userEvent.selectOptions(screen.getByLabelText(/visibility/i), 'public')
-    await userEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /save changes/i }))
 
     await waitFor(() => {
       expect(mock.updateProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({ privacy_setting: 'public' }))
@@ -120,7 +120,7 @@ describe('ProfilePage', () => {
   it('shows Saved confirmation after successful save', async () => {
     renderProfile()
     await waitFor(() => screen.getByDisplayValue('Moiz'))
-    await userEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /save changes/i }))
     await waitFor(() => {
       expect(screen.getByRole('status')).toHaveTextContent('Saved')
     })
@@ -132,7 +132,7 @@ describe('ProfilePage', () => {
     mock.updateProfile.mockRejectedValue(new Error('Network error'))
     renderProfile()
     await waitFor(() => screen.getByDisplayValue('Moiz'))
-    await userEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /save changes/i }))
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Network error')
     })
