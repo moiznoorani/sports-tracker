@@ -71,6 +71,17 @@ export const tournamentService = {
     return data
   },
 
+  async publishTournament(id: string): Promise<Tournament> {
+    const { data, error } = await supabase
+      .from('tournaments')
+      .update({ status: 'published' })
+      .eq('id', id)
+      .select('id, league_id, name, format, sport, start_date, end_date, status, created_by')
+      .single()
+    if (error) throw error
+    return data
+  },
+
   async updateTournament(id: string, params: UpdateTournamentParams): Promise<Tournament> {
     const patch: Record<string, unknown> = {}
     if (params.name !== undefined) patch.name = params.name

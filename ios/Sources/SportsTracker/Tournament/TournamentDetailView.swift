@@ -2,15 +2,19 @@ import SwiftUI
 
 public struct TournamentDetailView: View {
     @Bindable var vm: TournamentViewModel
+    @State private var teamVM = TeamViewModel()
     let tournamentId: String
     let leagueId: String
     let currentUserId: String
+    let isOrganizer: Bool
 
-    public init(vm: TournamentViewModel, tournamentId: String, leagueId: String, currentUserId: String = "") {
+    public init(vm: TournamentViewModel, tournamentId: String, leagueId: String,
+                currentUserId: String = "", isOrganizer: Bool = false) {
         self.vm = vm
         self.tournamentId = tournamentId
         self.leagueId = leagueId
         self.currentUserId = currentUserId
+        self.isOrganizer = isOrganizer
     }
 
     private var isCreator: Bool {
@@ -37,7 +41,10 @@ public struct TournamentDetailView: View {
                     .background(AppTheme.backgroundGradient.ignoresSafeArea())
             }
         }
-        .task { await vm.loadTournament(id: tournamentId) }
+        .task {
+            await vm.loadTournament(id: tournamentId)
+            await teamVM.loadTeams(tournamentId: tournamentId)
+        }
     }
 
     private func detail(_ t: Tournament) -> some View {
@@ -95,6 +102,19 @@ public struct TournamentDetailView: View {
                     .padding(18)
                 }
 
+                // Publish (creator only, draft only)
+                if isCreator && t.status == .draft {
+                    Button {
+                        Task { await vm.publishTournament(id: t.id, leagueId: leagueId) }
+                    } label: {
+                        Text("Publish Tournament")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
+
                 // Edit (creator only)
                 if isCreator {
                     NavigationLink(destination: EditTournamentView(vm: vm, tournament: t, leagueId: leagueId)) {
@@ -109,6 +129,56 @@ public struct TournamentDetailView: View {
                     }
                     .buttonStyle(GlassButtonStyle())
                     .padding(.horizontal, 0)
+                }
+
+                // Teams section
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("TEAMS · \(teamVM.teams.count)")
+                            .font(.system(size: 11, weight: .semibold))
+                            .tracking(1.2)
+                            .foregroundStyle(AppTheme.subtleText)
+
+                        if teamVM.teams.isEmpty {
+                            Text("No teams yet.")
+                                .font(.system(size: 14))
+                                .foregroundStyle(AppTheme.subtleText)
+                        } else {
+                            ForEach(teamVM.teams) { team in
+                                Text(team.name)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundStyle(AppTheme.primaryText)
+                                    .padding(.vertical, 6)
+                                    .padding(.horizontal, 10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.white.opacity(0.03))
+                                    .cornerRadius(8)
+                            }
+                        }
+
+                        if isOrganizer && t.status == .published {
+                            HStack(spacing: 8) {
+                                GlassTextField("Team name", text: $teamVM.newName)
+                                Button {
+                                    Task {
+                                        await teamVM.createTeam(tournamentId: t.id, name: teamVM.newName)
+                                    }
+                                } label: {
+                                    Text(teamVM.isCreating ? "…" : "Add")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 10)
+                                }
+                                .buttonStyle(PrimaryButtonStyle())
+                                .disabled(teamVM.isCreating || teamVM.newName.trimmingCharacters(in: .whitespaces).isEmpty)
+                            }
+                        }
+
+                        if let err = teamVM.errorMessage {
+                            ErrorBanner(err)
+                        }
+                    }
+                    .padding(18)
                 }
             }
             .padding(.horizontal, 20)

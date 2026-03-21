@@ -40,7 +40,7 @@ public struct TournamentsSection: View {
                         .foregroundStyle(AppTheme.subtleText)
                 } else {
                     ForEach(vm.tournaments) { tournament in
-                        NavigationLink(destination: TournamentDetailView(vm: vm, tournamentId: tournament.id, leagueId: leagueId, currentUserId: currentUserId)) {
+                        NavigationLink(destination: TournamentDetailView(vm: vm, tournamentId: tournament.id, leagueId: leagueId, currentUserId: currentUserId, isOrganizer: isOrganizer)) {
                             tournamentRow(tournament)
                         }
                         .buttonStyle(.plain)

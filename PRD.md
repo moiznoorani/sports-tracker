@@ -23,7 +23,7 @@
 
 ## Problem Statement
 
-Recreational and competitive sports leagues — particularly Ultimate Frisbee and Basketball — lack a single, cohesive tool that handles the full lifecycle of running a league: organizing tournaments, forming teams through a live draft, tracking player stats in real time during games, and giving players a persistent career profile they can carry across leagues. Organizers currently stitch together spreadsheets, group chats, and generic bracket tools. Players have no way to track their history. Spectators have no engagement surface. This app solves all three problems in one place, optimized for iPadOS on the sideline and fully accessible via web for users without an iPad.
+Recreational and competitive sports leagues — particularly Ultimate Frisbee and Basketball — lack a single, cohesive tool that handles the full lifecycle of running a league: organizing tournaments, forming teams through a live draft, tracking player stats in real time during games, and giving players a persistent career profile they can carry across leagues. Organizers currently stitch together spreadsheets, group chats, and generic bracket tools. Players have no way to track their history. Viewers — parents, friends, fans — have no way to follow along without being present. This app solves all three problems in one place, optimized for iPadOS on the sideline and fully accessible via web for users without an iPad.
 
 ---
 
@@ -32,11 +32,12 @@ Recreational and competitive sports leagues — particularly Ultimate Frisbee an
 A cross-platform sports management and stat-tracking app with:
 - **iPadOS + iOS native app** (SwiftUI) as the primary live-tracking experience
 - **React web app** as full-parity alternative and the data sync backend (powered by Supabase)
-- League and tournament management for Organizers
+- League and tournament management for Organizers, including eligibility criteria (age, gender) to gate membership
 - A live real-time Draft system (snake and auction styles) for Captains
 - Real-time stat tracking during Games by appointed Scorekeepers
 - Persistent Player profiles with unified Career Stats across all Sports and Leagues
 - Spectator engagement via Award voting at end of Tournament
+- **Anonymous Viewer access** — public Tournament and Game pages with live scores, rosters, schedule, bracket, and stats; no login required; shareable links work on web and iOS
 
 ---
 
@@ -130,6 +131,22 @@ A cross-platform sports management and stat-tracking app with:
 67. As a User, I want to receive a push notification when Award voting opens for a Tournament I participated in, so that I remember to vote.
 68. As a User, I want to be able to manage my notification preferences, so that I only receive the alerts I care about.
 
+### Player Profile — Eligibility Fields
+69. As a Player, I want to set my date of birth on my profile, so that Leagues can verify I meet their age requirements.
+70. As a Player, I want to set my gender on my profile (Male / Female / Prefer not to say), so that gender-restricted Leagues can evaluate my eligibility.
+71. As a Player, I want to record my experience level per Sport on my profile (Beginner / Intermediate / Advanced / Elite), so that Organizers can understand my background — even though this is not used as a hard eligibility gate.
+
+### League Eligibility
+72. As an Organizer, I want to set a minimum and/or maximum age on my League, so that only Players in the right age range can join.
+73. As an Organizer, I want to set a gender filter on my League (Any / Male / Female), so that gender-specific leagues are restricted appropriately.
+74. As a Player, I want to be automatically denied when I try to join a League whose Eligibility Criteria I do not meet, so that I receive immediate feedback instead of a pending request.
+
+### Viewer & Public Pages
+75. As a Viewer, I want to open a public Tournament page without logging in, so that I can see the Schedule, Teams, Standings or Bracket, and Tournament Location.
+76. As a Viewer, I want to open a public Game page without logging in and see the live Score, Rosters, and Stat feed updating in real time, so that I can follow a Game remotely.
+77. As an Organizer or Player, I want to share a Shareable Link to a Tournament or Game that anyone can open without an account, so that friends and family can follow along.
+78. As a Viewer on iOS, I want Shareable Links to open the native app (if installed) via a deep link, so that the experience is native rather than web-only.
+
 ---
 
 ## Implementation Decisions
@@ -150,8 +167,9 @@ A cross-platform sports management and stat-tracking app with:
 
 **League Module**
 - CRUD for Leagues, membership management, invite link generation and validation
-- Public League discovery by geographic proximity (lat/lng stored per League)
-- Interface: `createLeague`, `joinLeague(inviteToken)`, `getLeaguesByLocation`, `addMember`, `removeMember`
+- Eligibility Criteria (min_age, max_age, gender_filter) set by Organizer; auto-enforced on join via DB function
+- Public League discovery by geographic proximity (lat/lng stored per League; geo-browse is V2)
+- Interface: `createLeague`, `joinLeague(inviteToken)`, `joinPublicLeague`, `getLeaguesByLocation`, `addMember`, `removeMember`
 
 **Tournament Module**
 - CRUD for Tournaments within a League
@@ -190,8 +208,17 @@ A cross-platform sports management and stat-tracking app with:
 
 **Player Profile Module**
 - Aggregates Career Stats per Player across all Games, Tournaments, and Sports
+- Stores eligibility fields: date_of_birth, gender, sport_experience (per-sport, informational only)
 - Enforces privacy rules (private by default; auto-visible on League join or explicit opt-in)
-- Interface: `getProfile(userId)`, `getCareerStats(userId, sport?)`, `setPrivacy`
+- Interface: `getProfile(userId)`, `getCareerStats(userId, sport?)`, `setPrivacy`, `updateEligibilityFields`
+
+**Public Page Module**
+- Serves anonymously accessible Tournament and Game pages — no auth required
+- Tournament Public Page: location, schedule, teams/rosters, standings/bracket
+- Game Public Page: live score (Realtime), rosters, stat feed
+- Shareable Links resolve to Public Pages on web; iOS Universal Links open native app if installed
+- RLS: public tournaments and their games/stats are readable by `anon` role
+- Interface: `getPublicTournament(id)`, `getPublicGame(id)`, `getLiveScore(gameId)`
 
 **Award Module**
 - Organizer creates Award Categories; Users cast Votes (one per category per User)
@@ -204,10 +231,10 @@ A cross-platform sports management and stat-tracking app with:
 - Interface: `registerDevice`, `sendNotification(userId, event)`, `updatePreferences`
 
 ### Data Schema (key entities)
-- `users` — id, display_name, avatar_url, privacy_setting
-- `leagues` — id, name, sport, visibility, location (lat/lng), organizer_id, invite_token
+- `users` — id, display_name, avatar_url, privacy_setting, date_of_birth, gender, sport_experience (jsonb: `{sport: level}`)
+- `leagues` — id, name, sport, visibility, location (lat/lng), organizer_id, invite_token, min_age, max_age, gender_filter
 - `league_members` — league_id, user_id, joined_at
-- `tournaments` — id, league_id, sport, format, status, start_date, end_date
+- `tournaments` — id, league_id, sport, format, status, start_date, end_date, location (text)
 - `teams` — id, tournament_id, name, captain_id
 - `roster_entries` — team_id, player_id (unique constraint: player_id + tournament_id)
 - `games` — id, tournament_id, home_team_id, away_team_id, scheduled_at, status
@@ -257,6 +284,9 @@ Test only external, observable behavior — what goes in and what comes out — 
 ## Out of Scope (V2+)
 
 - Game Clock & Period Management (Phase 5d): server-authoritative countdown clock per period, Scorekeeper pause/resume, stat locking at period end with 30-second grace window, per-stage OT configuration (allowed/duration/sudden death), Organizer PIN + live approval for post-period stat edits, Basketball quarter/halftime break timers, Ultimate Frisbee soft cap / hard cap logic with dynamic game total recalculation — see GitHub issue #50
+- **Announcements**: Organizer broadcasts a message to all League members; visible as a pinned notice in the League and on the Public Page
+- **Game-day attendance / RSVP**: Players confirm or decline attendance for a specific Game; substitute slot management
+- **Geo-based League discovery**: browse public Leagues near the Player's location using lat/lng stored on Leagues and Player profiles
 - Offline stat tracking with multi-device sync and Stat Assignment (deferred due to sync complexity)
 - Additional sports: Flag Football, Cricket, Soccer, Tennis
 - Double elimination and pool play + bracket Tournament Formats

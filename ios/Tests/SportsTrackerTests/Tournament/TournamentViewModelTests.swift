@@ -125,4 +125,67 @@ struct TournamentViewModelTests {
 
         #expect(vm.errorMessage != nil)
     }
+
+    // MARK: - publishTournament
+
+    @Test func publishTournament_callsServiceWithCorrectId() async {
+        let mock = MockTournamentService()
+        mock.stubbedTournament = Tournament(
+            id: "t1", leagueId: "lg-1", name: "Spring Open",
+            format: .roundRobin, sport: .ultimateFrisbee,
+            startDate: "2026-04-01", endDate: "2026-04-02", status: .published
+        )
+        let vm = TournamentViewModel(service: mock)
+
+        await vm.publishTournament(id: "t1", leagueId: "lg-1")
+
+        #expect(mock.publishCalled == true)
+        #expect(mock.lastPublishedId == "t1")
+    }
+
+    @Test func publishTournament_updatesSelectedTournamentToPublished() async {
+        let mock = MockTournamentService()
+        mock.stubbedTournament = Tournament(
+            id: "t1", leagueId: "lg-1", name: "Spring Open",
+            format: .roundRobin, sport: .ultimateFrisbee,
+            startDate: "2026-04-01", endDate: "2026-04-02", status: .published
+        )
+        let vm = TournamentViewModel(service: mock)
+        vm.selectedTournament = Tournament(
+            id: "t1", leagueId: "lg-1", name: "Spring Open",
+            format: .roundRobin, sport: .ultimateFrisbee,
+            startDate: "2026-04-01", endDate: "2026-04-02", status: .draft
+        )
+
+        await vm.publishTournament(id: "t1", leagueId: "lg-1")
+
+        #expect(vm.selectedTournament?.status == .published)
+    }
+
+    @Test func publishTournament_reloadsTournamentsList() async {
+        let mock = MockTournamentService()
+        let published = Tournament(
+            id: "t1", leagueId: "lg-1", name: "Spring Open",
+            format: .roundRobin, sport: .ultimateFrisbee,
+            startDate: "2026-04-01", endDate: "2026-04-02", status: .published
+        )
+        mock.stubbedTournament = published
+        mock.stubbedTournaments = [published]
+        let vm = TournamentViewModel(service: mock)
+
+        await vm.publishTournament(id: "t1", leagueId: "lg-1")
+
+        #expect(vm.tournaments.count == 1)
+        #expect(vm.tournaments[0].status == .published)
+    }
+
+    @Test func publishTournament_setsErrorOnFailure() async {
+        let mock = MockTournamentService()
+        mock.shouldThrow = TournamentError(message: "Not authorized")
+        let vm = TournamentViewModel(service: mock)
+
+        await vm.publishTournament(id: "t1", leagueId: "lg-1")
+
+        #expect(vm.errorMessage != nil)
+    }
 }
