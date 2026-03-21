@@ -12,7 +12,7 @@ cd web && npm run typecheck && npm test
 cd ios && swift test
 ```
 
-**Current baseline (as of issue #11):** 89 web tests · 71 iOS tests
+**Current baseline (as of issue #12):** 101 web tests · 80 iOS tests
 
 ## Project layout
 
@@ -51,6 +51,7 @@ Each domain module lives in its own subdirectory:
 
 - **Tournament service mock**: any test file that renders `LeagueDetailPage` must mock `tournamentService` and stub `getTournaments.mockResolvedValue([])` in `beforeEach` — otherwise the component hangs
 - **TournamentDetailPage**: mocks `leagueService.getMembers` and `teamService.getTeams/createTeam` in its `beforeEach` — add these whenever expanding that test suite
+- **TeamDetailPage**: mocks `teamService.getTeam`, `rosterService.getRoster/assignPlayer/removePlayer/setCaptain`, and `leagueService.getMembers` in its `beforeEach`
 - Use `getByRole('heading', { name: /…/i })` not `getByText` when matching section headings that also appear as body text
 
 ## DB / migrations

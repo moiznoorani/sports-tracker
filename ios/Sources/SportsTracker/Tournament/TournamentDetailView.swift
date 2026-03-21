@@ -145,14 +145,28 @@ public struct TournamentDetailView: View {
                                 .foregroundStyle(AppTheme.subtleText)
                         } else {
                             ForEach(teamVM.teams) { team in
-                                Text(team.name)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(AppTheme.primaryText)
+                                NavigationLink(destination: TeamDetailView(
+                                    teamVM: teamVM,
+                                    teamId: team.id,
+                                    tournamentId: t.id,
+                                    leagueId: leagueId,
+                                    isOrganizer: isOrganizer
+                                )) {
+                                    HStack {
+                                        Text(team.name)
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundStyle(AppTheme.primaryText)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundStyle(AppTheme.subtleText)
+                                    }
                                     .padding(.vertical, 6)
                                     .padding(.horizontal, 10)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
                                     .background(Color.white.opacity(0.03))
                                     .cornerRadius(8)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
 
