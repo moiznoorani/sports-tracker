@@ -12,6 +12,8 @@ cd web && npm run typecheck && npm test
 cd ios && swift test
 ```
 
+**Current baseline (as of issue #11):** 89 web tests · 71 iOS tests
+
 ## Project layout
 
 ```
@@ -20,6 +22,13 @@ ios/        Swift Package — iOS/iPadOS native app
 supabase/   Migrations, config, edge functions
 plans/      Implementation plan
 ```
+
+Each domain module lives in its own subdirectory:
+- `ios/Sources/SportsTracker/<Module>/` — `<Module>Service.swift`, `<Module>ViewModel.swift`, views
+- `ios/Tests/SportsTrackerTests/<Module>/` — `Mock<Module>Service.swift`, `<Module>ViewModelTests.swift`
+- `web/src/services/<module>Service.ts` — Supabase queries
+- `web/src/pages/<module>/` — React page components
+- `web/src/test/<module>.test.tsx` — Vitest + Testing Library tests
 
 ## Key conventions
 
@@ -34,6 +43,8 @@ plans/      Implementation plan
 - **UUID casing**: `session.user.id.uuidString` returns uppercase; Supabase returns lowercase UUIDs. Always call `.lowercased()` when comparing user IDs from Supabase (e.g. `session.user.id.uuidString.lowercased()`)
 - **Every new service method** added to a `*ServiceProtocol` must also be added to the corresponding `Mock*Service` in `ios/Tests/`
 - **`@Observable` ViewModels** use `@Bindable` at call sites — never `@ObservedObject`
+- **`@State` for owned ViewModels**: ViewModels used inside a view (not passed from a parent) must be declared `@State private var vm = MyViewModel()` — not created in the init parameter default, which causes recreation on every render
+- **Pass all flags through NavigationLink destinations**: if a parent view has state like `isOrganizer`, explicitly pass it to child destination views — don't rely on defaults
 - **gh issue list** default pagination is 30 — always pass `--limit 100` when fetching the full queue
 
 ## Web-specific conventions
