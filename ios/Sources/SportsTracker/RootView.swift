@@ -27,7 +27,7 @@ public struct RootView: View {
                 profileVM: profileVM,
                 leagueVM: leagueVM,
                 tournamentVM: tournamentVM,
-                userId: session.user.id.uuidString
+                userId: session.user.id.uuidString.lowercased()
             )
         }
     }
