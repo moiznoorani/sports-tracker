@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { tournamentService, type Tournament } from '../../services/tournamentService'
+import { teamService, type Team } from '../../services/teamService'
+import { leagueService, type Member } from '../../services/leagueService'
 import { GlassCard } from '../../components/ui/GlassCard'
 
 const FORMAT_LABELS: Record<string, string> = {
@@ -18,15 +20,32 @@ export function TournamentDetailPage() {
   const { id: leagueId, tournamentId } = useParams<{ id: string; tournamentId: string }>()
   const { user } = useAuth()
   const [tournament, setTournament] = useState<Tournament | null>(null)
+  const [members, setMembers] = useState<Member[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
   const [error, setError] = useState<string | null>(null)
   const [publishing, setPublishing] = useState(false)
+  const [newTeamName, setNewTeamName] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!tournamentId) return
+    if (!tournamentId || !leagueId) return
     tournamentService.getTournament(tournamentId)
       .then(setTournament)
       .catch((e: Error) => setError(e.message))
-  }, [tournamentId])
+    leagueService.getMembers(leagueId)
+      .then(setMembers)
+      .catch(() => {/* non-fatal */})
+    teamService.getTeams(tournamentId)
+      .then(setTeams)
+      .catch(() => {/* non-fatal */})
+  }, [tournamentId, leagueId])
+
+  async function reloadTeams() {
+    if (!tournamentId) return
+    const updated = await teamService.getTeams(tournamentId)
+    setTeams(updated)
+  }
 
   async function handlePublish() {
     if (!tournament) return
@@ -39,6 +58,22 @@ export function TournamentDetailPage() {
       setError(e instanceof Error ? e.message : 'Failed to publish')
     } finally {
       setPublishing(false)
+    }
+  }
+
+  async function handleCreateTeam(e: React.FormEvent) {
+    e.preventDefault()
+    if (!tournamentId || !newTeamName.trim()) return
+    setCreating(true)
+    setCreateError(null)
+    try {
+      await teamService.createTeam(tournamentId, newTeamName.trim())
+      setNewTeamName('')
+      await reloadTeams()
+    } catch (e: unknown) {
+      setCreateError(e instanceof Error ? e.message : 'Failed to create team')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -56,6 +91,7 @@ export function TournamentDetailPage() {
   )
 
   const isCreator = tournament.created_by === user?.id
+  const isOrganizer = members.some(m => m.user_id === user?.id && m.role === 'organizer')
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -131,6 +167,57 @@ export function TournamentDetailPage() {
           </button>
         </div>
       )}
+
+      <GlassCard padding="p-5" className="mt-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-subtle)' }}>
+          Teams · {teams.length}
+        </h2>
+
+        {teams.length === 0 ? (
+          <p className="text-sm mb-3" style={{ color: 'var(--text-subtle)' }}>No teams yet.</p>
+        ) : (
+          <ul className="flex flex-col gap-2 mb-3">
+            {teams.map(t => (
+              <li key={t.id} className="text-sm py-1.5 px-2 rounded-lg"
+                style={{ color: 'var(--text-primary)', background: 'rgba(255,255,255,0.03)' }}>
+                {t.name}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {isOrganizer && tournament.status === 'published' && (
+          <form onSubmit={handleCreateTeam} className="flex gap-2 mt-2">
+            <input
+              type="text"
+              placeholder="Team name"
+              value={newTeamName}
+              onChange={e => setNewTeamName(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '0.5px solid var(--border-card)',
+                color: 'var(--text-primary)',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={creating || !newTeamName.trim()}
+              className="px-4 py-2 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #7B3F85 0%, #9B5AA6 100%)', color: '#fff' }}
+            >
+              {creating ? '…' : 'Add Team'}
+            </button>
+          </form>
+        )}
+
+        {createError && (
+          <p role="alert" className="text-sm mt-2 px-3 py-2 rounded-lg"
+            style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
+            {createError}
+          </p>
+        )}
+      </GlassCard>
     </div>
   )
 }

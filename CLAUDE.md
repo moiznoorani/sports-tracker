@@ -39,6 +39,7 @@ plans/      Implementation plan
 ## Web-specific conventions
 
 - **Tournament service mock**: any test file that renders `LeagueDetailPage` must mock `tournamentService` and stub `getTournaments.mockResolvedValue([])` in `beforeEach` — otherwise the component hangs
+- **TournamentDetailPage**: mocks `leagueService.getMembers` and `teamService.getTeams/createTeam` in its `beforeEach` — add these whenever expanding that test suite
 - Use `getByRole('heading', { name: /…/i })` not `getByText` when matching section headings that also appear as body text
 
 ## DB / migrations

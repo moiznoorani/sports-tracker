@@ -7,6 +7,7 @@ import { LeagueDetailPage } from '../pages/leagues/LeagueDetailPage'
 import { CreateTournamentPage } from '../pages/leagues/CreateTournamentPage'
 import { TournamentDetailPage } from '../pages/leagues/TournamentDetailPage'
 import type { Session } from '@supabase/supabase-js'
+import type { Team } from '../services/teamService'
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,13 @@ vi.mock('../services/leagueService', () => ({
     getLeague: vi.fn(),
     getMembers: vi.fn(),
     removeMember: vi.fn(),
+  },
+}))
+
+vi.mock('../services/teamService', () => ({
+  teamService: {
+    getTeams: vi.fn(),
+    createTeam: vi.fn(),
   },
 }))
 
@@ -60,6 +68,14 @@ async function getTournamentMock() {
   }
 }
 
+async function getTeamMock() {
+  const mod = await import('../services/teamService')
+  return mod.teamService as {
+    getTeams: ReturnType<typeof vi.fn>
+    createTeam: ReturnType<typeof vi.fn>
+  }
+}
+
 const fakeLeague = {
   id: 'lg-1', name: 'Tuesday Ultimate', sport: 'ultimate_frisbee' as const,
   visibility: 'private' as const, invite_token: 'tok-abc',
@@ -71,6 +87,16 @@ const fakeTournaments = [
     sport: 'ultimate_frisbee' as const, start_date: '2026-04-01', end_date: '2026-04-02',
     status: 'draft' as const, created_by: 'user-org',
   },
+]
+
+const publishedTournament = {
+  ...fakeTournaments[0],
+  status: 'published' as const,
+}
+
+const fakeTeams: Team[] = [
+  { id: 'team-1', tournament_id: 'tm-1', name: 'Alpha', created_by: 'user-org', created_at: '2026-04-01T00:00:00Z' },
+  { id: 'team-2', tournament_id: 'tm-1', name: 'Beta',  created_by: 'user-org', created_at: '2026-04-01T00:01:00Z' },
 ]
 
 function renderLeagueDetail(user = organizerUser) {
@@ -248,6 +274,13 @@ describe('TournamentDetailPage', () => {
     const tsvc = await getTournamentMock()
     tsvc.getTournament.mockResolvedValue(fakeTournaments[0])
     tsvc.publishTournament.mockResolvedValue({ ...fakeTournaments[0], status: 'published' })
+    const lsvc = await getLeagueMock()
+    lsvc.getMembers.mockResolvedValue([
+      { user_id: 'user-org', role: 'organizer', display_name: 'Alice', avatar_url: null },
+    ])
+    const teamsvc = await getTeamMock()
+    teamsvc.getTeams.mockResolvedValue([])
+    teamsvc.createTeam.mockResolvedValue(fakeTeams[0])
   })
 
   it('shows tournament name, format, sport, and dates', async () => {
@@ -327,5 +360,102 @@ describe('TournamentDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /publish tournament/i }))
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(screen.getByText(/not authorized/i)).toBeInTheDocument()
+  })
+})
+
+// ── Teams section ──────────────────────────────────────────────────────────────
+
+describe('TournamentDetailPage — teams section', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    const lsvc = await getLeagueMock()
+    lsvc.getMembers.mockResolvedValue([
+      { user_id: 'user-org', role: 'organizer', display_name: 'Alice', avatar_url: null },
+    ])
+    const tsvc = await getTournamentMock()
+    tsvc.getTournament.mockResolvedValue(publishedTournament)
+    tsvc.publishTournament.mockResolvedValue(publishedTournament)
+    const teamsvc = await getTeamMock()
+    teamsvc.getTeams.mockResolvedValue([])
+    teamsvc.createTeam.mockResolvedValue(fakeTeams[0])
+  })
+
+  // Slice 1: teams list loads and renders names
+  it('shows teams heading', async () => {
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Spring Open'))
+    expect(screen.getByRole('heading', { name: /teams/i })).toBeInTheDocument()
+  })
+
+  it('shows existing team names', async () => {
+    const teamsvc = await getTeamMock()
+    teamsvc.getTeams.mockResolvedValue(fakeTeams)
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Alpha'))
+    expect(screen.getByText('Beta')).toBeInTheDocument()
+  })
+
+  // Slice 2: create form visibility
+  it('shows Add Team form for organizer of a published tournament', async () => {
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Spring Open'))
+    expect(screen.getByPlaceholderText(/team name/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /add team/i })).toBeInTheDocument()
+  })
+
+  it('does not show Add Team form for a non-organizer', async () => {
+    const lsvc = await getLeagueMock()
+    lsvc.getMembers.mockResolvedValue([
+      { user_id: 'user-other', role: 'member', display_name: 'Bob', avatar_url: null },
+    ])
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Spring Open'))
+    expect(screen.queryByPlaceholderText(/team name/i)).not.toBeInTheDocument()
+  })
+
+  it('does not show Add Team form for a draft tournament', async () => {
+    const tsvc = await getTournamentMock()
+    tsvc.getTournament.mockResolvedValue(fakeTournaments[0]) // draft
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Spring Open'))
+    expect(screen.queryByPlaceholderText(/team name/i)).not.toBeInTheDocument()
+  })
+
+  // Slice 3: submit creates team and reloads
+  it('calls createTeam with correct params on submit', async () => {
+    const teamsvc = await getTeamMock()
+    const user = userEvent.setup()
+    renderTournamentDetail()
+    await waitFor(() => screen.getByPlaceholderText(/team name/i))
+    await user.type(screen.getByPlaceholderText(/team name/i), 'Gamma')
+    await user.click(screen.getByRole('button', { name: /add team/i }))
+    await waitFor(() => expect(teamsvc.createTeam).toHaveBeenCalledWith('tm-1', 'Gamma'))
+  })
+
+  it('clears input and reloads teams after successful create', async () => {
+    const teamsvc = await getTeamMock()
+    teamsvc.getTeams
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([fakeTeams[0]])
+    const user = userEvent.setup()
+    renderTournamentDetail()
+    await waitFor(() => screen.getByPlaceholderText(/team name/i))
+    await user.type(screen.getByPlaceholderText(/team name/i), 'Alpha')
+    await user.click(screen.getByRole('button', { name: /add team/i }))
+    await waitFor(() => screen.getByText('Alpha'))
+    expect((screen.getByPlaceholderText(/team name/i) as HTMLInputElement).value).toBe('')
+  })
+
+  // Slice 4: error handling
+  it('shows error alert when createTeam fails', async () => {
+    const teamsvc = await getTeamMock()
+    teamsvc.createTeam.mockRejectedValue(new Error('Duplicate team name'))
+    const user = userEvent.setup()
+    renderTournamentDetail()
+    await waitFor(() => screen.getByPlaceholderText(/team name/i))
+    await user.type(screen.getByPlaceholderText(/team name/i), 'Alpha')
+    await user.click(screen.getByRole('button', { name: /add team/i }))
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(screen.getByText(/duplicate team name/i)).toBeInTheDocument()
   })
 })
