@@ -2,17 +2,15 @@ import SwiftUI
 
 public struct TournamentDetailView: View {
     @Bindable var vm: TournamentViewModel
-    @Bindable var teamVM: TeamViewModel
+    @State private var teamVM = TeamViewModel()
     let tournamentId: String
     let leagueId: String
     let currentUserId: String
     let isOrganizer: Bool
 
-    public init(vm: TournamentViewModel, teamVM: TeamViewModel = TeamViewModel(),
-                tournamentId: String, leagueId: String,
+    public init(vm: TournamentViewModel, tournamentId: String, leagueId: String,
                 currentUserId: String = "", isOrganizer: Bool = false) {
         self.vm = vm
-        self.teamVM = teamVM
         self.tournamentId = tournamentId
         self.leagueId = leagueId
         self.currentUserId = currentUserId
