@@ -19,6 +19,7 @@ export function TournamentDetailPage() {
   const { user } = useAuth()
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [publishing, setPublishing] = useState(false)
 
   useEffect(() => {
     if (!tournamentId) return
@@ -26,6 +27,20 @@ export function TournamentDetailPage() {
       .then(setTournament)
       .catch((e: Error) => setError(e.message))
   }, [tournamentId])
+
+  async function handlePublish() {
+    if (!tournament) return
+    setPublishing(true)
+    setError(null)
+    try {
+      const updated = await tournamentService.publishTournament(tournament.id)
+      setTournament(updated)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to publish')
+    } finally {
+      setPublishing(false)
+    }
+  }
 
   if (error) return (
     <div className="max-w-2xl mx-auto">
@@ -103,6 +118,19 @@ export function TournamentDetailPage() {
           </div>
         </dl>
       </GlassCard>
+
+      {isCreator && tournament.status === 'draft' && (
+        <div className="mt-4">
+          <button
+            onClick={handlePublish}
+            disabled={publishing}
+            className="w-full py-4 rounded-2xl font-semibold text-base transition-opacity disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #7B3F85 0%, #9B5AA6 100%)', color: '#fff' }}
+          >
+            {publishing ? 'Publishing…' : 'Publish Tournament'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -36,6 +36,7 @@ vi.mock('../services/tournamentService', () => ({
     getTournament: vi.fn(),
     createTournament: vi.fn(),
     updateTournament: vi.fn(),
+    publishTournament: vi.fn(),
   },
 }))
 
@@ -55,6 +56,7 @@ async function getTournamentMock() {
     getTournament: ReturnType<typeof vi.fn>
     createTournament: ReturnType<typeof vi.fn>
     updateTournament: ReturnType<typeof vi.fn>
+    publishTournament: ReturnType<typeof vi.fn>
   }
 }
 
@@ -245,6 +247,7 @@ describe('TournamentDetailPage', () => {
     vi.clearAllMocks()
     const tsvc = await getTournamentMock()
     tsvc.getTournament.mockResolvedValue(fakeTournaments[0])
+    tsvc.publishTournament.mockResolvedValue({ ...fakeTournaments[0], status: 'published' })
   })
 
   it('shows tournament name, format, sport, and dates', async () => {
@@ -266,5 +269,63 @@ describe('TournamentDetailPage', () => {
     renderTournamentDetail()
     await waitFor(() => screen.getByText('Spring Open'))
     expect(screen.getByRole('link', { name: /edit/i })).toBeInTheDocument()
+  })
+
+  it('shows Publish button for creator of a draft tournament', async () => {
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Spring Open'))
+    expect(screen.getByRole('button', { name: /publish tournament/i })).toBeInTheDocument()
+  })
+
+  it('does not show Publish button for non-creator', async () => {
+    const nonCreator = { id: 'user-other', email: 'other@example.com' } as Session['user']
+    render(
+      <AuthContext.Provider value={makeAuthContext(nonCreator)}>
+        <MemoryRouter initialEntries={['/leagues/lg-1/tournaments/tm-1']}>
+          <Routes>
+            <Route path="/leagues/:id/tournaments/:tournamentId" element={<TournamentDetailPage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
+    )
+    await waitFor(() => screen.getByText('Spring Open'))
+    expect(screen.queryByRole('button', { name: /publish tournament/i })).not.toBeInTheDocument()
+  })
+
+  it('does not show Publish button when tournament is already published', async () => {
+    const tsvc = await getTournamentMock()
+    tsvc.getTournament.mockResolvedValue({ ...fakeTournaments[0], status: 'published' })
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Spring Open'))
+    expect(screen.queryByRole('button', { name: /publish tournament/i })).not.toBeInTheDocument()
+  })
+
+  it('calls publishTournament with correct id on click', async () => {
+    const tsvc = await getTournamentMock()
+    const user = userEvent.setup()
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Spring Open'))
+    await user.click(screen.getByRole('button', { name: /publish tournament/i }))
+    await waitFor(() => expect(tsvc.publishTournament).toHaveBeenCalledWith('tm-1'))
+  })
+
+  it('updates status tag to Published after successful publish', async () => {
+    const user = userEvent.setup()
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Spring Open'))
+    await user.click(screen.getByRole('button', { name: /publish tournament/i }))
+    await waitFor(() => expect(screen.getByText('Published')).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: /publish tournament/i })).not.toBeInTheDocument()
+  })
+
+  it('shows error alert when publish fails', async () => {
+    const tsvc = await getTournamentMock()
+    tsvc.publishTournament.mockRejectedValue(new Error('Not authorized'))
+    const user = userEvent.setup()
+    renderTournamentDetail()
+    await waitFor(() => screen.getByText('Spring Open'))
+    await user.click(screen.getByRole('button', { name: /publish tournament/i }))
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(screen.getByText(/not authorized/i)).toBeInTheDocument()
   })
 })

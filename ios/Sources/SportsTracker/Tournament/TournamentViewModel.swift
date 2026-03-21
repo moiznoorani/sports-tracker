@@ -67,4 +67,14 @@ public final class TournamentViewModel {
             errorMessage = error.localizedDescription
         }
     }
+
+    public func publishTournament(id: String, leagueId: String) async {
+        errorMessage = nil
+        do {
+            selectedTournament = try await service.publishTournament(id: id)
+            await loadTournaments(leagueId: leagueId)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }

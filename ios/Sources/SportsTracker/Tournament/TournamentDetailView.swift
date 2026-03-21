@@ -95,6 +95,19 @@ public struct TournamentDetailView: View {
                     .padding(18)
                 }
 
+                // Publish (creator only, draft only)
+                if isCreator && t.status == .draft {
+                    Button {
+                        Task { await vm.publishTournament(id: t.id, leagueId: leagueId) }
+                    } label: {
+                        Text("Publish Tournament")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
+
                 // Edit (creator only)
                 if isCreator {
                     NavigationLink(destination: EditTournamentView(vm: vm, tournament: t, leagueId: leagueId)) {

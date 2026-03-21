@@ -66,6 +66,7 @@ public protocol TournamentServiceProtocol: Sendable {
                           sport: Sport, startDate: String, endDate: String) async throws -> Tournament
     func updateTournament(id: String, name: String?, format: TournamentFormat?,
                           sport: Sport?, startDate: String?, endDate: String?) async throws -> Tournament
+    func publishTournament(id: String) async throws -> Tournament
 }
 
 public final class TournamentService: TournamentServiceProtocol {
@@ -126,6 +127,17 @@ public final class TournamentService: TournamentServiceProtocol {
                           start_date: startDate, end_date: endDate)
         return try await client.from("tournaments")
             .update(patch)
+            .eq("id", value: id)
+            .select("id, league_id, name, format, sport, start_date, end_date, status, created_by")
+            .single()
+            .execute()
+            .value
+    }
+
+    public func publishTournament(id: String) async throws -> Tournament {
+        struct Patch: Encodable { let status: String }
+        return try await client.from("tournaments")
+            .update(Patch(status: "published"))
             .eq("id", value: id)
             .select("id, league_id, name, format, sport, start_date, end_date, status, created_by")
             .single()
