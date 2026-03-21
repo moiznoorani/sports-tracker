@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { leagueService, type League, type Member } from '../../services/leagueService'
+import { tournamentService, type Tournament } from '../../services/tournamentService'
 import { GlassCard } from '../../components/ui/GlassCard'
 import { Button } from '../../components/ui/Button'
 
@@ -15,18 +16,21 @@ export function LeagueDetailPage() {
   const { user } = useAuth()
   const [league, setLeague] = useState<League | null>(null)
   const [members, setMembers] = useState<Member[]>([])
+  const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const loadData = async (leagueId: string) => {
     try {
-      const [l, m] = await Promise.all([
+      const [l, m, t] = await Promise.all([
         leagueService.getLeague(leagueId),
         leagueService.getMembers(leagueId),
+        tournamentService.getTournaments(leagueId),
       ])
       setLeague(l)
       setMembers(m)
+      setTournaments(t)
     } catch (e) {
       setError((e as Error).message)
     }
@@ -115,6 +119,58 @@ export function LeagueDetailPage() {
             {copied ? '✓ Copied' : 'Copy'}
           </Button>
         </div>
+      </GlassCard>
+
+      {/* Tournaments */}
+      <GlassCard padding="p-5" className="mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-subtle)' }}>
+            Tournaments · {tournaments.length}
+          </h2>
+          {isOrganizer && (
+            <Link to={`/leagues/${id}/tournaments/new`} aria-label="Create Tournament">
+              <Button size="sm" variant="glass">+ Create Tournament</Button>
+            </Link>
+          )}
+        </div>
+        {tournaments.length === 0 ? (
+          <p className="text-sm" style={{ color: 'var(--text-subtle)' }}>No tournaments yet.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {tournaments.map(t => (
+              <li key={t.id}>
+                <Link
+                  to={`/leagues/${id}/tournaments/${t.id}`}
+                  aria-label={t.name}
+                  className="block group"
+                >
+                  <div className="flex items-center gap-3 py-2 px-1 rounded-xl transition-all hover:bg-white/5">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{t.name}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: 'rgba(123,63,133,0.15)', color: 'var(--accent-light)' }}>
+                          {t.format === 'round_robin' ? 'Round Robin' : 'Single Elimination'}
+                        </span>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: 'rgba(123,63,133,0.15)', color: 'var(--accent-light)' }}>
+                          {t.sport === 'ultimate_frisbee' ? 'Ultimate Frisbee' : 'Basketball'}
+                        </span>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={t.status === 'published'
+                            ? { background: 'rgba(123,63,133,0.25)', color: 'var(--accent-light)' }
+                            : { background: 'rgba(255,255,255,0.06)', color: 'var(--text-subtle)' }}>
+                          {t.status === 'published' ? 'Published' : 'Draft'}
+                        </span>
+                      </div>
+                    </div>
+                    <span style={{ color: 'var(--text-subtle)' }} className="opacity-40 group-hover:opacity-70 transition-opacity">›</span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </GlassCard>
 
       {/* Members */}

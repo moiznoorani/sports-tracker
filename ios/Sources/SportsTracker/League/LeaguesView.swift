@@ -2,12 +2,14 @@ import SwiftUI
 
 public struct LeaguesView: View {
     @Bindable var vm: LeagueViewModel
+    @Bindable var tournamentVM: TournamentViewModel
     let userId: String
     @State private var showCreate = false
     @State private var showJoin = false
 
-    public init(vm: LeagueViewModel, userId: String = "") {
+    public init(vm: LeagueViewModel, tournamentVM: TournamentViewModel = TournamentViewModel(), userId: String = "") {
         self.vm = vm
+        self.tournamentVM = tournamentVM
         self.userId = userId
     }
 
@@ -55,7 +57,7 @@ public struct LeaguesView: View {
         ScrollView {
             VStack(spacing: 10) {
                 ForEach(vm.leagues) { league in
-                    NavigationLink(destination: LeagueDetailView(vm: vm, leagueId: league.id, currentUserId: userId)) {
+                    NavigationLink(destination: LeagueDetailView(vm: vm, tournamentVM: tournamentVM, leagueId: league.id, currentUserId: userId)) {
                         GlassCard(cornerRadius: 16) {
                             HStack(spacing: 14) {
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
