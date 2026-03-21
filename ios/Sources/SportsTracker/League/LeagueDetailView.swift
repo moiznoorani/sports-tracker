@@ -2,12 +2,15 @@ import SwiftUI
 
 public struct LeagueDetailView: View {
     @Bindable var vm: LeagueViewModel
+    @Bindable var tournamentVM: TournamentViewModel
     let leagueId: String
     let currentUserId: String
     @State private var copied = false
 
-    public init(vm: LeagueViewModel, leagueId: String, currentUserId: String = "") {
+    public init(vm: LeagueViewModel, tournamentVM: TournamentViewModel = TournamentViewModel(),
+                leagueId: String, currentUserId: String = "") {
         self.vm = vm
+        self.tournamentVM = tournamentVM
         self.leagueId = leagueId
         self.currentUserId = currentUserId
     }
@@ -40,6 +43,7 @@ public struct LeagueDetailView: View {
         .task {
             await vm.loadLeague(id: leagueId)
             await vm.loadMembers(leagueId: leagueId)
+            await tournamentVM.loadTournaments(leagueId: leagueId)
         }
     }
 
@@ -78,6 +82,14 @@ public struct LeagueDetailView: View {
                 if let token = league.inviteToken {
                     inviteLinkCard(token: token)
                 }
+
+                // Tournaments section
+                TournamentsSection(
+                    vm: tournamentVM,
+                    leagueId: leagueId,
+                    isOrganizer: isOrganizer,
+                    currentUserId: currentUserId
+                )
 
                 // Members card
                 membersCard

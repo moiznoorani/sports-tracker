@@ -29,6 +29,12 @@ vi.mock('../services/leagueService', () => ({
   },
 }))
 
+vi.mock('../services/tournamentService', () => ({
+  tournamentService: {
+    getTournaments: vi.fn(),
+  },
+}))
+
 async function getMockService() {
   const mod = await import('../services/leagueService')
   return mod.leagueService as {
@@ -74,6 +80,8 @@ describe('LeagueDetailPage — Members', () => {
     mock.getLeague.mockResolvedValue(defaultLeague)
     mock.getMembers.mockResolvedValue(defaultMembers)
     mock.removeMember.mockResolvedValue(undefined)
+    const tmod = await import('../services/tournamentService')
+    ;(tmod.tournamentService.getTournaments as ReturnType<typeof vi.fn>).mockResolvedValue([])
   })
 
   it('shows member display names', async () => {

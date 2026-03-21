@@ -4,6 +4,7 @@ public struct RootView: View {
     @State private var authVM = AuthViewModel()
     @State private var profileVM = ProfileViewModel()
     @State private var leagueVM = LeagueViewModel()
+    @State private var tournamentVM = TournamentViewModel()
 
     public init() {}
 
@@ -25,7 +26,8 @@ public struct RootView: View {
                 authVM: authVM,
                 profileVM: profileVM,
                 leagueVM: leagueVM,
-                userId: session.user.id.uuidString
+                tournamentVM: tournamentVM,
+                userId: session.user.id.uuidString.lowercased()
             )
         }
     }

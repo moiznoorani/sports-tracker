@@ -38,6 +38,12 @@ vi.mock('../services/leagueService', () => ({
   },
 }))
 
+vi.mock('../services/tournamentService', () => ({
+  tournamentService: {
+    getTournaments: vi.fn(),
+  },
+}))
+
 async function getMockService() {
   const mod = await import('../services/leagueService')
   return mod.leagueService as {
@@ -95,6 +101,8 @@ describe('LeagueDetailPage', () => {
       { user_id: 'user-123', role: 'organizer', display_name: 'Me', avatar_url: null },
     ])
     mock.getMyLeagues.mockResolvedValue([])
+    const tmod = await import('../services/tournamentService')
+    ;(tmod.tournamentService.getTournaments as ReturnType<typeof vi.fn>).mockResolvedValue([])
   })
 
   it('shows a loading state initially', () => {
