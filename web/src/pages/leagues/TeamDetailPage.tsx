@@ -60,6 +60,7 @@ export function TeamDetailPage() {
   }
 
   const isOrganizer = members.some(m => m.user_id === user?.id && m.role === 'organizer')
+  const memberMap = new Map(members.map(m => [m.user_id, m]))
   const assignedIds = new Set(roster.map(r => r.player_id))
   const unassigned = members.filter(m => m.role !== 'organizer' && !assignedIds.has(m.user_id))
 
@@ -103,7 +104,7 @@ export function TeamDetailPage() {
                   {(p.display_name ?? '?')[0].toUpperCase()}
                 </div>
                 <span className="flex-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  {p.display_name ?? p.player_id}
+                  {p.display_name ?? memberMap.get(p.player_id)?.display_name ?? p.player_id}
                 </span>
                 {team.captain_id === p.player_id && (
                   <span className="text-xs px-2 py-0.5 rounded-full font-medium"

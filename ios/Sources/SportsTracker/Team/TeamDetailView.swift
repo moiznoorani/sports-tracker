@@ -3,20 +3,19 @@ import SwiftUI
 public struct TeamDetailView: View {
     @Bindable var teamVM: TeamViewModel
     @State private var rosterVM = RosterViewModel()
+    @State private var leagueMembers: [LeagueMember] = []
     let teamId: String
     let tournamentId: String
     let leagueId: String
     let isOrganizer: Bool
-    let leagueMembers: [LeagueMember]
 
     public init(teamVM: TeamViewModel, teamId: String, tournamentId: String,
-                leagueId: String, isOrganizer: Bool = false, leagueMembers: [LeagueMember] = []) {
+                leagueId: String, isOrganizer: Bool = false) {
         self.teamVM = teamVM
         self.teamId = teamId
         self.tournamentId = tournamentId
         self.leagueId = leagueId
         self.isOrganizer = isOrganizer
-        self.leagueMembers = leagueMembers
     }
 
     private var team: Team? { teamVM.teams.first(where: { $0.id == teamId }) }
@@ -36,6 +35,7 @@ public struct TeamDetailView: View {
         .background(AppTheme.backgroundGradient.ignoresSafeArea())
         .task {
             await rosterVM.loadRoster(teamId: teamId)
+            leagueMembers = (try? await LeagueService(client: .shared).getMembers(leagueId: leagueId)) ?? []
         }
     }
 
@@ -78,7 +78,9 @@ public struct TeamDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .foregroundStyle(.white)
 
-            Text(player.displayName ?? player.playerId)
+            Text(player.displayName
+                ?? leagueMembers.first(where: { $0.userId == player.playerId })?.displayName
+                ?? player.playerId)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(AppTheme.primaryText)
 
