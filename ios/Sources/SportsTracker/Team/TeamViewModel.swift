@@ -29,6 +29,7 @@ public final class TeamViewModel {
     }
 
     public func loadMyTeamId(tournamentId: String, playerId: String) async {
+        guard !playerId.isEmpty else { return }
         myTeamId = try? await rosterService.getMyTeamId(tournamentId: tournamentId, playerId: playerId)
     }
 

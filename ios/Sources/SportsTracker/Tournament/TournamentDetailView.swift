@@ -43,10 +43,9 @@ public struct TournamentDetailView: View {
         }
         .task {
             await vm.loadTournament(id: tournamentId)
-            await teamVM.loadTeams(tournamentId: tournamentId)
-            if !currentUserId.isEmpty {
-                await teamVM.loadMyTeamId(tournamentId: tournamentId, playerId: currentUserId)
-            }
+            async let teams: Void = teamVM.loadTeams(tournamentId: tournamentId)
+            async let myTeam: Void = teamVM.loadMyTeamId(tournamentId: tournamentId, playerId: currentUserId)
+            _ = await (teams, myTeam)
         }
     }
 
