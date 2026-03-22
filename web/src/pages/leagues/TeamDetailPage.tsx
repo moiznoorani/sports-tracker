@@ -5,6 +5,8 @@ import { teamService, type Team } from '../../services/teamService'
 import { rosterService, type RosterPlayer } from '../../services/rosterService'
 import { leagueService, type Member } from '../../services/leagueService'
 import { GlassCard } from '../../components/ui/GlassCard'
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
+import { ErrorBanner } from '../../components/ui/ErrorBanner'
 
 export function TeamDetailPage() {
   const { leagueId, tournamentId, teamId } = useParams<{
@@ -64,12 +66,7 @@ export function TeamDetailPage() {
   const assignedIds = new Set(roster.map(r => r.player_id))
   const unassigned = members.filter(m => m.role !== 'organizer' && !assignedIds.has(m.user_id))
 
-  if (!team) return (
-    <div className="flex items-center justify-center py-24">
-      <div role="status" className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: 'rgba(123,63,133,0.4)', borderTopColor: '#7B3F85' }} />
-    </div>
-  )
+  if (!team) return <LoadingSpinner />
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -171,12 +168,7 @@ export function TeamDetailPage() {
           </p>
         )}
 
-        {assignError && (
-          <p role="alert" className="text-sm mt-2 px-3 py-2 rounded-lg"
-            style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
-            {assignError}
-          </p>
-        )}
+        {assignError && <ErrorBanner message={assignError} className="mt-2" />}
       </GlassCard>
     </div>
   )

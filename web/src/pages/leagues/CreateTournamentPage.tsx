@@ -6,6 +6,7 @@ import { GlassCard } from '../../components/ui/GlassCard'
 import { GlassInput } from '../../components/ui/GlassInput'
 import { GlassSelect } from '../../components/ui/GlassSelect'
 import { Button } from '../../components/ui/Button'
+import { ErrorBanner } from '../../components/ui/ErrorBanner'
 
 const FORMAT_OPTIONS = [
   { value: 'round_robin', label: 'Round Robin' },
@@ -56,11 +57,7 @@ export function CreateTournamentPage() {
       </h1>
 
       <GlassCard padding="p-6">
-        {error && (
-          <div role="alert" className="text-sm px-4 py-3 rounded-xl mb-5" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mb-5" />}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <GlassInput
             id="name"

@@ -6,16 +6,9 @@ import { teamService, type Team } from '../../services/teamService'
 import { leagueService, type Member } from '../../services/leagueService'
 import { rosterService } from '../../services/rosterService'
 import { GlassCard } from '../../components/ui/GlassCard'
-
-const FORMAT_LABELS: Record<string, string> = {
-  round_robin: 'Round Robin',
-  single_elimination: 'Single Elimination',
-}
-
-const SPORT_LABELS: Record<string, string> = {
-  ultimate_frisbee: 'Ultimate Frisbee',
-  basketball: 'Basketball',
-}
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
+import { ErrorBanner } from '../../components/ui/ErrorBanner'
+import { SPORT_LABELS, FORMAT_LABELS } from '../../constants/labels'
 
 export function TournamentDetailPage() {
   const { id: leagueId, tournamentId } = useParams<{ id: string; tournamentId: string }>()
@@ -86,16 +79,11 @@ export function TournamentDetailPage() {
 
   if (error) return (
     <div className="max-w-2xl mx-auto">
-      <p role="alert" className="text-sm px-4 py-3 rounded-xl" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>{error}</p>
+      <ErrorBanner message={error} />
     </div>
   )
 
-  if (!tournament) return (
-    <div className="flex items-center justify-center py-24">
-      <div role="status" className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: 'rgba(123,63,133,0.4)', borderTopColor: '#7B3F85' }} />
-    </div>
-  )
+  if (!tournament) return <LoadingSpinner />
 
   const isCreator = tournament.created_by === user?.id
   const isOrganizer = members.some(m => m.user_id === user?.id && m.role === 'organizer')
@@ -231,12 +219,7 @@ export function TournamentDetailPage() {
           </form>
         )}
 
-        {createError && (
-          <p role="alert" className="text-sm mt-2 px-3 py-2 rounded-lg"
-            style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
-            {createError}
-          </p>
-        )}
+        {createError && <ErrorBanner message={createError} className="mt-2" />}
       </GlassCard>
     </div>
   )
