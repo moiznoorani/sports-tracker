@@ -54,6 +54,10 @@ Each domain module lives in its own subdirectory:
 - **TeamDetailPage**: mocks `teamService.getTeam`, `rosterService.getRoster/assignPlayer/removePlayer/setCaptain`, and `leagueService.getMembers` in its `beforeEach`
 - Use `getByRole('heading', { name: /…/i })` not `getByText` when matching section headings that also appear as body text
 
+## Supabase-specific conventions
+
+- **FK joins for display names don't reliably work** via PostgREST `.select('users(display_name)')` — the schema cache often misses newly added FKs. Always resolve display names client-side from already-loaded member lists (web: `memberMap`, iOS: `leagueMembers` state loaded in `.task`). Never rely solely on a PostgREST embedded join for user display names.
+
 ## DB / migrations
 
 - New schema changes always go in a new file under `supabase/migrations/` with a timestamp prefix
