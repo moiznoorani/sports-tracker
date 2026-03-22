@@ -178,9 +178,14 @@ export function TournamentDetailPage() {
         ) : (
           <ul className="flex flex-col gap-2 mb-3">
             {teams.map(t => (
-              <li key={t.id} className="text-sm py-1.5 px-2 rounded-lg"
-                style={{ color: 'var(--text-primary)', background: 'rgba(255,255,255,0.03)' }}>
-                {t.name}
+              <li key={t.id}>
+                <Link
+                  to={`/leagues/${leagueId}/tournaments/${tournamentId}/teams/${t.id}`}
+                  className="flex items-center justify-between py-1.5 px-2 rounded-lg group hover:bg-white/5 transition-colors"
+                  style={{ color: 'var(--text-primary)' }}>
+                  <span className="text-sm">{t.name}</span>
+                  <span style={{ color: 'var(--text-subtle)' }} className="opacity-40 group-hover:opacity-70">›</span>
+                </Link>
               </li>
             ))}
           </ul>

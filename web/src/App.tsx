@@ -14,6 +14,7 @@ import { JoinLeaguePage } from './pages/leagues/JoinLeaguePage'
 import { BrowseLeaguesPage } from './pages/leagues/BrowseLeaguesPage'
 import { CreateTournamentPage } from './pages/leagues/CreateTournamentPage'
 import { TournamentDetailPage } from './pages/leagues/TournamentDetailPage'
+import { TeamDetailPage } from './pages/leagues/TeamDetailPage'
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="/leagues/:id" element={<AppShell><LeagueDetailPage /></AppShell>} />
             <Route path="/leagues/:id/tournaments/new" element={<AppShell><CreateTournamentPage /></AppShell>} />
             <Route path="/leagues/:id/tournaments/:tournamentId" element={<AppShell><TournamentDetailPage /></AppShell>} />
+            <Route path="/leagues/:leagueId/tournaments/:tournamentId/teams/:teamId" element={<AppShell><TeamDetailPage /></AppShell>} />
           </Route>
 
           {/* Catch-all */}

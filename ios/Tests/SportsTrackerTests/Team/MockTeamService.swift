@@ -13,6 +13,12 @@ final class MockTeamService: TeamServiceProtocol, @unchecked Sendable {
         return stubbedTeams
     }
 
+    func getTeam(id: String) async throws -> Team {
+        if let error = shouldThrow { throw error }
+        return stubbedTeams.first(where: { $0.id == id })
+            ?? Team(id: id, tournamentId: "tm-1", name: "Test")
+    }
+
     func createTeam(tournamentId: String, name: String) async throws -> Team {
         createCalled = true
         lastCreatedTournamentId = tournamentId

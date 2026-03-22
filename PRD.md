@@ -7,6 +7,16 @@
 | #3 | Phase 1 [Auth]: Email/password sign up, sign in, sign out, password reset | Closed ✅ |
 | #4 | Phase 1 [Auth]: Apple + Google OAuth | Closed ✅ |
 | #5 | Phase 1 [Auth]: Player profile — display name, avatar upload, privacy toggle | Closed ✅ |
+| #6 | Phase 2 [Leagues]: League creation — name, sport, visibility, location schema | Closed ✅ |
+| #7 | Phase 2 [Leagues]: Invite link generation + join via token | Closed ✅ |
+| #58 | Phase 2 [Leagues]: Public league discovery — browse and one-click join | Closed ✅ |
+| #8 | Phase 2 [Leagues]: Membership management — view members, remove member | Closed ✅ |
+| #9 | Phase 3a [Tournament]: Tournament CRUD — format, sport, date range | Closed ✅ |
+| #10 | Phase 3a [Tournament]: Tournament publishing + League member visibility | Closed ✅ |
+| #11 | Phase 3b [Teams]: Team creation within a Tournament | Closed ✅ |
+| #12 | Phase 3b [Teams]: Player assignment, Captain designation, one-player-per-tournament constraint | Closed ✅ |
+
+**Test suite as of #12:** 101 web tests (Vitest + Testing Library) · 80 iOS tests (Swift Testing)
 
 ### Phase 1 Deploy — Verified 2026-03-19
 - iPadOS (Xcode 26.4, iPad Pro 13" M5 sim): **BUILD SUCCEEDED**, app runs
@@ -235,8 +245,8 @@ A cross-platform sports management and stat-tracking app with:
 - `leagues` — id, name, sport, visibility, location (lat/lng), organizer_id, invite_token, min_age, max_age, gender_filter
 - `league_members` — league_id, user_id, joined_at
 - `tournaments` — id, league_id, sport, format, status, start_date, end_date, location (text)
-- `teams` — id, tournament_id, name, captain_id
-- `roster_entries` — team_id, player_id (unique constraint: player_id + tournament_id)
+- `teams` — id, tournament_id, name, captain_id, created_by, created_at
+- `roster_entries` — id, team_id, tournament_id, player_id, joined_at (UNIQUE: player_id + tournament_id)
 - `games` — id, tournament_id, home_team_id, away_team_id, scheduled_at, status
 - `drafts` — id, tournament_id, format, budget_per_team, pick_timer_seconds, status
 - `draft_picks` — id, draft_id, team_id, player_id, pick_number, timestamp
