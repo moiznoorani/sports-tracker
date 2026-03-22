@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { tournamentService, type Tournament } from '../../services/tournamentService'
 import { teamService, type Team } from '../../services/teamService'
 import { leagueService, type Member } from '../../services/leagueService'
+import { rosterService } from '../../services/rosterService'
 import { GlassCard } from '../../components/ui/GlassCard'
 
 const FORMAT_LABELS: Record<string, string> = {
@@ -22,6 +23,7 @@ export function TournamentDetailPage() {
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [teams, setTeams] = useState<Team[]>([])
+  const [myTeamId, setMyTeamId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [publishing, setPublishing] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
@@ -39,7 +41,12 @@ export function TournamentDetailPage() {
     teamService.getTeams(tournamentId)
       .then(setTeams)
       .catch(() => {/* non-fatal */})
-  }, [tournamentId, leagueId])
+    if (user?.id) {
+      rosterService.getMyRosterEntry(tournamentId, user.id)
+        .then(entry => setMyTeamId(entry?.team_id ?? null))
+        .catch(() => {/* non-fatal */})
+    }
+  }, [tournamentId, leagueId, user?.id])
 
   async function reloadTeams() {
     if (!tournamentId) return
@@ -184,7 +191,15 @@ export function TournamentDetailPage() {
                   className="flex items-center justify-between py-1.5 px-2 rounded-lg group hover:bg-white/5 transition-colors"
                   style={{ color: 'var(--text-primary)' }}>
                   <span className="text-sm">{t.name}</span>
-                  <span style={{ color: 'var(--text-subtle)' }} className="opacity-40 group-hover:opacity-70">›</span>
+                  <span className="flex items-center gap-2">
+                    {myTeamId === t.id && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(123,63,133,0.25)', color: 'var(--accent-light)' }}>
+                        Your Team
+                      </span>
+                    )}
+                    <span style={{ color: 'var(--text-subtle)' }} className="opacity-40 group-hover:opacity-70">›</span>
+                  </span>
                 </Link>
               </li>
             ))}

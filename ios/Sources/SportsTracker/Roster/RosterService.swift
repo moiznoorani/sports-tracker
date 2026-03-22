@@ -37,6 +37,7 @@ public protocol RosterServiceProtocol: Sendable {
     func assignPlayer(teamId: String, tournamentId: String, playerId: String) async throws -> RosterPlayer
     func removePlayer(id: String) async throws
     func setCaptain(teamId: String, captainId: String) async throws
+    func getMyTeamId(tournamentId: String, playerId: String) async throws -> String?
 }
 
 public final class RosterService: RosterServiceProtocol {
@@ -105,5 +106,17 @@ public final class RosterService: RosterServiceProtocol {
             .update(Patch(captain_id: captainId))
             .eq("id", value: teamId)
             .execute()
+    }
+
+    public func getMyTeamId(tournamentId: String, playerId: String) async throws -> String? {
+        struct Row: Decodable { let team_id: String }
+        let rows: [Row] = try await client.from("roster_entries")
+            .select("team_id")
+            .eq("tournament_id", value: tournamentId)
+            .eq("player_id", value: playerId)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first?.team_id
     }
 }

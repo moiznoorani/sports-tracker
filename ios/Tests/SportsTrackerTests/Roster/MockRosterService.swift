@@ -46,4 +46,11 @@ final class MockRosterService: RosterServiceProtocol, @unchecked Sendable {
         lastCaptainPlayerId = captainId
         if let error = shouldThrow { throw error }
     }
+
+    var stubbedMyTeamId: String? = nil
+
+    func getMyTeamId(tournamentId: String, playerId: String) async throws -> String? {
+        if let error = shouldThrow { throw error }
+        return stubbedMyTeamId
+    }
 }

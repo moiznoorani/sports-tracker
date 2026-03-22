@@ -49,4 +49,14 @@ export const rosterService = {
       .eq('id', teamId)
     if (error) throw error
   },
+
+  async getMyRosterEntry(tournamentId: string, playerId: string): Promise<{ team_id: string } | null> {
+    const { data } = await supabase
+      .from('roster_entries')
+      .select('team_id')
+      .eq('tournament_id', tournamentId)
+      .eq('player_id', playerId)
+      .maybeSingle()
+    return data
+  },
 }
