@@ -5,14 +5,18 @@ import Observation
 @MainActor
 public final class TeamViewModel {
     public var teams: [Team] = []
+    public var myTeamId: String? = nil
     public var errorMessage: String? = nil
     public var newName: String = ""
     public var isCreating = false
 
     private let service: TeamServiceProtocol
+    private let rosterService: RosterServiceProtocol
 
-    public init(service: TeamServiceProtocol = TeamService(client: .shared)) {
+    public init(service: TeamServiceProtocol = TeamService(client: .shared),
+                rosterService: RosterServiceProtocol = RosterService(client: .shared)) {
         self.service = service
+        self.rosterService = rosterService
     }
 
     public func loadTeams(tournamentId: String) async {
@@ -22,6 +26,10 @@ public final class TeamViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    public func loadMyTeamId(tournamentId: String, playerId: String) async {
+        myTeamId = try? await rosterService.getMyTeamId(tournamentId: tournamentId, playerId: playerId)
     }
 
     public func createTeam(tournamentId: String, name: String) async {

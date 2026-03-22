@@ -3,7 +3,6 @@ import SwiftUI
 public struct TournamentDetailView: View {
     @Bindable var vm: TournamentViewModel
     @State private var teamVM = TeamViewModel()
-    @State private var myTeamId: String? = nil
     let tournamentId: String
     let leagueId: String
     let currentUserId: String
@@ -46,8 +45,7 @@ public struct TournamentDetailView: View {
             await vm.loadTournament(id: tournamentId)
             await teamVM.loadTeams(tournamentId: tournamentId)
             if !currentUserId.isEmpty {
-                myTeamId = try? await RosterService(client: .shared)
-                    .getMyTeamId(tournamentId: tournamentId, playerId: currentUserId)
+                await teamVM.loadMyTeamId(tournamentId: tournamentId, playerId: currentUserId)
             }
         }
     }
@@ -162,7 +160,7 @@ public struct TournamentDetailView: View {
                                             .font(.system(size: 14, weight: .medium))
                                             .foregroundStyle(AppTheme.primaryText)
                                         Spacer()
-                                        if myTeamId == team.id {
+                                        if teamVM.myTeamId == team.id {
                                             GlassTag("Your Team", color: AppTheme.accentLight)
                                         }
                                         Image(systemName: "chevron.right")

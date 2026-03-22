@@ -67,4 +67,26 @@ struct TeamViewModelTests {
         #expect(vm.errorMessage != nil)
         #expect(vm.teams.isEmpty)
     }
+
+    // MARK: - loadMyTeamId
+
+    @Test func loadMyTeamId_exposesTeamIdWhenAssigned() async {
+        let mockRoster = MockRosterService()
+        mockRoster.stubbedMyTeamId = "t2"
+        let vm = TeamViewModel(service: MockTeamService(), rosterService: mockRoster)
+
+        await vm.loadMyTeamId(tournamentId: "tm-1", playerId: "p1")
+
+        #expect(vm.myTeamId == "t2")
+    }
+
+    @Test func loadMyTeamId_isNilWhenNotAssigned() async {
+        let mockRoster = MockRosterService()
+        mockRoster.stubbedMyTeamId = nil
+        let vm = TeamViewModel(service: MockTeamService(), rosterService: mockRoster)
+
+        await vm.loadMyTeamId(tournamentId: "tm-1", playerId: "p1")
+
+        #expect(vm.myTeamId == nil)
+    }
 }

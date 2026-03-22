@@ -523,10 +523,13 @@ describe('TournamentDetailPage — your team indicator', () => {
     expect(screen.queryByText('Your Team')).not.toBeInTheDocument()
   })
 
-  it('calls getMyRosterEntry with correct tournamentId and userId', async () => {
+  it('shows Your Team badge on the correct team when user is on the second team', async () => {
     const rsvc = await getRosterMock()
+    rsvc.getMyRosterEntry.mockResolvedValue({ team_id: 'team-2' })
     renderTournamentDetailAs()
-    await waitFor(() => screen.getByText('Alpha'))
-    expect(rsvc.getMyRosterEntry).toHaveBeenCalledWith('tm-1', 'user-player')
+    await waitFor(() => screen.getByText('Beta'))
+    const betaItem = screen.getByText('Beta').closest('li')!
+    expect(betaItem).toHaveTextContent('Your Team')
+    expect(screen.getByText('Alpha').closest('li')).not.toHaveTextContent('Your Team')
   })
 })
