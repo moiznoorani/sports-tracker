@@ -5,10 +5,11 @@
 | Term | Definition | Aliases to avoid |
 |------|-----------|-----------------|
 | **User** | An authenticated identity in the system; every person has exactly one account | Account, login |
-| **Player** | A User who participates in Games as a member of a Team | Athlete, member, participant |
-| **Organizer** | A User who creates and administers a League and its Tournaments | Tournament admin, admin, manager (when referring to league-level role) |
+| **Member** | *(new)* A User who belongs to a League; has role `member` (Player-eligible) or `organizer`; not every Member is a Player — that status is only acquired when assigned to a Team's Roster | Participant, league member |
+| **Player** | A Member who has been assigned to a Team's Roster for a specific Tournament; the term only applies within the scope of that Tournament | Athlete, member, participant |
+| **Organizer** | A User who creates and administers a League and its Tournaments; the only role that may create Teams and assign Players | Tournament admin, admin, manager (when referring to league-level role) |
 | **Scorekeeper** | A User appointed by an Organizer to record Stats during a specific Game | Score tracker, stat tracker |
-| **Captain** | A User who manages a Team and participates in the Draft on behalf of that Team | Team manager, team captain, manager |
+| **Captain** | *(updated)* A Player designated by an Organizer as the named leader of a Team; in V1 the Captain can view the Roster but does not control assignments — that remains the Organizer's role | Team manager, team captain, manager |
 | **Viewer** | *(updated)* An anonymous or authenticated person who consumes public Tournament or Game data without participating — no account required | Fan, spectator (when used to mean anonymous observer) |
 | **Spectator** | *(updated)* A logged-in User who views Game results and votes for Awards; distinct from an anonymous Viewer | Fan, viewer (when the person has an account) |
 
@@ -46,7 +47,9 @@
 | Term | Definition | Aliases to avoid |
 |------|-----------|-----------------|
 | **Team** | A group of Players competing together in a Tournament, created by the Organizer | Squad, club, side |
-| **Roster** | The list of Players assigned to a Team for a specific Tournament | Lineup, squad list |
+| **Roster** | The full list of Players assigned to a Team for a specific Tournament | Lineup, squad list |
+| **Roster Entry** | *(new)* A single record that places exactly one Player on exactly one Team within one Tournament; the DB constraint `one_team_per_tournament` is enforced at this level | Roster record, assignment record |
+| **Player Assignment** | *(new)* The Organizer action of adding a Member to a Team's Roster, creating a Roster Entry; only Organizers may perform this action in V1 | Assign player, add to team, roster player |
 
 ## Draft
 
@@ -99,7 +102,9 @@
 - A **Tournament** has a **Shareable Link** that opens its **Public Page** without authentication
 - A **Game** has a **Shareable Link** that opens its **Public Page** — a live scoreboard accessible to any **Viewer**
 - A **Tournament** contains one or more **Games** and one or more **Teams**
-- A **Team** has one **Roster** per **Tournament**; a **Player** may appear on multiple **Teams** across different **Tournaments** but only one **Team** per **Tournament**
+- A **Team** has one **Roster** per **Tournament**; a **Member** may be a **Player** on at most one **Team** per **Tournament** (enforced by the `one_team_per_tournament` DB constraint on **Roster Entry**)
+- A **Roster** is the aggregate view of all **Roster Entries** for a **Team**; a **Player Assignment** creates a **Roster Entry**
+- A **Team** has at most one **Captain**; the **Captain** is designated by an **Organizer** and is always a **Player** on that Team's **Roster**
 - A **Game** has exactly one **Score** (win/loss outcome) and many **Stats** attributed to **Players**
 - A **Scorekeeper** is assigned specific **Stat Categories** for a **Game** via **Stat Assignment**
 - A **Draft** belongs to one **Tournament** and produces the **Roster** for each **Team**
@@ -140,3 +145,5 @@
 - **"Score" vs "Stat"** — "score" was sometimes used loosely to mean any tracked number. **Score** is strictly the Game outcome (who won). **Stat** is a Player-level recorded event. These must not be conflated in the data model.
 - **"League" vs "Tournament"** — early in the conversation these were used interchangeably. They are distinct: a **League** is the persistent community/organization; a **Tournament** is a time-bound competition within it. A League with one Tournament is still a League containing a Tournament, not just a Tournament.
 - **"Shareable Link" vs "Invite Link"** — an **Invite Link** is a private token for joining a private **League** (requires authentication). A **Shareable Link** opens a public **Public Page** with no auth required. Never use these terms interchangeably.
+- **"Member" vs "Player"** — *(new)* used interchangeably in early Phase 3b discussion and in the `league_members` table name vs `RosterPlayer` type. A **Member** has a League-scoped role; a **Player** is a Member who has been assigned to a Team's Roster in a specific Tournament. Every Player is a Member; not every Member is a Player. In code: `league_members` rows are Members; `roster_entries` rows make them Players.
+- **"Creator" vs "Organizer"** — *(new)* the `teams` table has a `created_by` column (the Creator) and the RLS UPDATE policy was initially written as `created_by = auth.uid()`, restricting updates to the Team's Creator. The correct intent is any league **Organizer** may update any Team in their league — Creator and Organizer are not the same thing. "Creator" is an implementation detail of the row; "Organizer" is the domain role with authority. Use **Organizer** in domain conversations and documentation; use `created_by` only when discussing the DB schema.

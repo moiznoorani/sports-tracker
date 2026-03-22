@@ -19,6 +19,7 @@ public struct TeamDetailView: View {
     }
 
     private var team: Team? { teamVM.teams.first(where: { $0.id == teamId }) }
+    private var memberMap: [String: LeagueMember] { Dictionary(uniqueKeysWithValues: leagueMembers.map { ($0.userId, $0) }) }
 
     public var body: some View {
         ScrollView {
@@ -34,8 +35,10 @@ public struct TeamDetailView: View {
         #endif
         .background(AppTheme.backgroundGradient.ignoresSafeArea())
         .task {
-            await rosterVM.loadRoster(teamId: teamId)
-            leagueMembers = (try? await LeagueService(client: .shared).getMembers(leagueId: leagueId)) ?? []
+            async let roster: Void = rosterVM.loadRoster(teamId: teamId)
+            async let members: [LeagueMember] = (try? await LeagueService(client: .shared).getMembers(leagueId: leagueId)) ?? []
+            await roster
+            leagueMembers = await members
         }
     }
 
@@ -79,7 +82,7 @@ public struct TeamDetailView: View {
                 .foregroundStyle(.white)
 
             Text(player.displayName
-                ?? leagueMembers.first(where: { $0.userId == player.playerId })?.displayName
+                ?? memberMap[player.playerId]?.displayName
                 ?? player.playerId)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(AppTheme.primaryText)

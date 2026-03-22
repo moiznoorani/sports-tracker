@@ -38,6 +38,12 @@ vi.mock('../services/teamService', () => ({
   },
 }))
 
+vi.mock('../services/rosterService', () => ({
+  rosterService: {
+    getMyRosterEntry: vi.fn(),
+  },
+}))
+
 vi.mock('../services/tournamentService', () => ({
   tournamentService: {
     getTournaments: vi.fn(),
@@ -73,6 +79,13 @@ async function getTeamMock() {
   return mod.teamService as {
     getTeams: ReturnType<typeof vi.fn>
     createTeam: ReturnType<typeof vi.fn>
+  }
+}
+
+async function getRosterMock() {
+  const mod = await import('../services/rosterService')
+  return mod.rosterService as {
+    getMyRosterEntry: ReturnType<typeof vi.fn>
   }
 }
 
@@ -281,6 +294,8 @@ describe('TournamentDetailPage', () => {
     const teamsvc = await getTeamMock()
     teamsvc.getTeams.mockResolvedValue([])
     teamsvc.createTeam.mockResolvedValue(fakeTeams[0])
+    const rsvc = await getRosterMock()
+    rsvc.getMyRosterEntry.mockResolvedValue(null)
   })
 
   it('shows tournament name, format, sport, and dates', async () => {
@@ -378,6 +393,8 @@ describe('TournamentDetailPage — teams section', () => {
     const teamsvc = await getTeamMock()
     teamsvc.getTeams.mockResolvedValue([])
     teamsvc.createTeam.mockResolvedValue(fakeTeams[0])
+    const rsvc = await getRosterMock()
+    rsvc.getMyRosterEntry.mockResolvedValue(null)
   })
 
   // Slice 1: teams list loads and renders names
@@ -457,5 +474,62 @@ describe('TournamentDetailPage — teams section', () => {
     await user.click(screen.getByRole('button', { name: /add team/i }))
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(screen.getByText(/duplicate team name/i)).toBeInTheDocument()
+  })
+})
+
+// ── Your Team indicator ────────────────────────────────────────────────────────
+
+const playerUser = { id: 'user-player', email: 'player@example.com' } as Session['user']
+
+function renderTournamentDetailAs(user = playerUser) {
+  return render(
+    <AuthContext.Provider value={makeAuthContext(user)}>
+      <MemoryRouter initialEntries={['/leagues/lg-1/tournaments/tm-1']}>
+        <Routes>
+          <Route path="/leagues/:id/tournaments/:tournamentId" element={<TournamentDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    </AuthContext.Provider>
+  )
+}
+
+describe('TournamentDetailPage — your team indicator', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    const lsvc = await getLeagueMock()
+    lsvc.getMembers.mockResolvedValue([
+      { user_id: 'user-player', role: 'member', display_name: 'Bob', avatar_url: null },
+    ])
+    const tsvc = await getTournamentMock()
+    tsvc.getTournament.mockResolvedValue(publishedTournament)
+    const teamsvc = await getTeamMock()
+    teamsvc.getTeams.mockResolvedValue(fakeTeams)
+    teamsvc.createTeam.mockResolvedValue(fakeTeams[0])
+    const rsvc = await getRosterMock()
+    rsvc.getMyRosterEntry.mockResolvedValue(null)
+  })
+
+  it('shows Your Team badge on the team the current user is assigned to', async () => {
+    const rsvc = await getRosterMock()
+    rsvc.getMyRosterEntry.mockResolvedValue({ team_id: 'team-1' })
+    renderTournamentDetailAs()
+    await waitFor(() => screen.getByText('Alpha'))
+    expect(screen.getByText('Your Team')).toBeInTheDocument()
+  })
+
+  it('does not show Your Team badge when user is not assigned to any team', async () => {
+    renderTournamentDetailAs()
+    await waitFor(() => screen.getByText('Alpha'))
+    expect(screen.queryByText('Your Team')).not.toBeInTheDocument()
+  })
+
+  it('shows Your Team badge on the correct team when user is on the second team', async () => {
+    const rsvc = await getRosterMock()
+    rsvc.getMyRosterEntry.mockResolvedValue({ team_id: 'team-2' })
+    renderTournamentDetailAs()
+    await waitFor(() => screen.getByText('Beta'))
+    const betaItem = screen.getByText('Beta').closest('li')!
+    expect(betaItem).toHaveTextContent('Your Team')
+    expect(screen.getByText('Alpha').closest('li')).not.toHaveTextContent('Your Team')
   })
 })

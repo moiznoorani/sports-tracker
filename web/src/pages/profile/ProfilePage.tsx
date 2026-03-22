@@ -5,6 +5,7 @@ import { GlassCard } from '../../components/ui/GlassCard'
 import { GlassInput } from '../../components/ui/GlassInput'
 import { GlassSelect } from '../../components/ui/GlassSelect'
 import { Button } from '../../components/ui/Button'
+import { ErrorBanner } from '../../components/ui/ErrorBanner'
 
 export function ProfilePage() {
   const { user } = useAuth()
@@ -108,11 +109,7 @@ export function ProfilePage() {
             ]}
           />
 
-          {error && (
-            <p role="alert" className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
-              {error}
-            </p>
-          )}
+          {error && <ErrorBanner message={error} size="xs" />}
 
           {saved && (
             <p role="status" className="text-xs px-3 py-2 rounded-lg text-center" style={{ background: 'rgba(52,168,83,0.1)', color: '#4ade80' }}>

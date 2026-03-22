@@ -5,11 +5,9 @@ import { leagueService, type League, type Member } from '../../services/leagueSe
 import { tournamentService, type Tournament } from '../../services/tournamentService'
 import { GlassCard } from '../../components/ui/GlassCard'
 import { Button } from '../../components/ui/Button'
-
-const SPORT_LABELS: Record<string, string> = {
-  ultimate_frisbee: 'Ultimate Frisbee',
-  basketball: 'Basketball',
-}
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
+import { ErrorBanner } from '../../components/ui/ErrorBanner'
+import { SPORT_LABELS } from '../../constants/labels'
 
 export function LeagueDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -52,19 +50,11 @@ export function LeagueDetailPage() {
 
   if (error) return (
     <div className="max-w-2xl mx-auto">
-      <p role="alert" className="text-sm px-4 py-3 rounded-xl" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>{error}</p>
+      <ErrorBanner message={error} />
     </div>
   )
 
-  if (!league) return (
-    <div className="flex items-center justify-center py-24">
-      <div
-        role="status"
-        className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: 'rgba(123,63,133,0.4)', borderTopColor: '#7B3F85' }}
-      />
-    </div>
-  )
+  if (!league) return <LoadingSpinner />
 
   const inviteUrl = `${window.location.origin}/leagues/join/${league.invite_token}`
 

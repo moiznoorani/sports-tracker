@@ -43,7 +43,9 @@ public struct TournamentDetailView: View {
         }
         .task {
             await vm.loadTournament(id: tournamentId)
-            await teamVM.loadTeams(tournamentId: tournamentId)
+            async let teams: Void = teamVM.loadTeams(tournamentId: tournamentId)
+            async let myTeam: Void = teamVM.loadMyTeamId(tournamentId: tournamentId, playerId: currentUserId)
+            _ = await (teams, myTeam)
         }
     }
 
@@ -157,6 +159,9 @@ public struct TournamentDetailView: View {
                                             .font(.system(size: 14, weight: .medium))
                                             .foregroundStyle(AppTheme.primaryText)
                                         Spacer()
+                                        if teamVM.myTeamId == team.id {
+                                            GlassTag("Your Team", color: AppTheme.accentLight)
+                                        }
                                         Image(systemName: "chevron.right")
                                             .font(.system(size: 11, weight: .semibold))
                                             .foregroundStyle(AppTheme.subtleText)

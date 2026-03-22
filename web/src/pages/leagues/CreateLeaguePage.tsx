@@ -5,6 +5,7 @@ import { GlassCard } from '../../components/ui/GlassCard'
 import { GlassInput } from '../../components/ui/GlassInput'
 import { GlassSelect } from '../../components/ui/GlassSelect'
 import { Button } from '../../components/ui/Button'
+import { ErrorBanner } from '../../components/ui/ErrorBanner'
 
 export function CreateLeaguePage() {
   const navigate = useNavigate()
@@ -75,11 +76,7 @@ export function CreateLeaguePage() {
             ]}
           />
 
-          {error && (
-            <div role="alert" className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
-              {error}
-            </div>
-          )}
+          {error && <ErrorBanner message={error} size="xs" />}
 
           <div className="flex gap-3 pt-1">
             <Link to="/leagues" className="flex-1">

@@ -3,11 +3,9 @@ import { Link } from 'react-router-dom'
 import { leagueService, type League } from '../../services/leagueService'
 import { GlassCard } from '../../components/ui/GlassCard'
 import { Button } from '../../components/ui/Button'
-
-const SPORT_LABELS: Record<string, string> = {
-  ultimate_frisbee: 'Ultimate Frisbee',
-  basketball: 'Basketball',
-}
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner'
+import { ErrorBanner } from '../../components/ui/ErrorBanner'
+import { SPORT_LABELS } from '../../constants/labels'
 
 export function LeaguesPage() {
   const [leagues, setLeagues] = useState<League[]>([])
@@ -21,15 +19,7 @@ export function LeaguesPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-24">
-      <div
-        role="status"
-        className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: 'rgba(123,63,133,0.4)', borderTopColor: '#7B3F85' }}
-      />
-    </div>
-  )
+  if (loading) return <LoadingSpinner />
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -45,11 +35,7 @@ export function LeaguesPage() {
         </Link>
       </div>
 
-      {error && (
-        <div role="alert" className="text-sm px-4 py-3 rounded-xl mb-4" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
-          {error}
-        </div>
-      )}
+      {error && <ErrorBanner message={error} className="mb-4" />}
 
       {!error && leagues.length === 0 && (
         <GlassCard padding="p-10" className="text-center">

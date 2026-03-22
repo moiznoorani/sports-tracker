@@ -95,8 +95,9 @@ public final class LeagueViewModel {
         errorMessage = nil
         do {
             try await service.joinLeague(leagueId: leagueId)
-            await loadLeagues()
-            await browseLeagues()
+            async let myLeagues: Void = loadLeagues()
+            async let browse: Void = browseLeagues()
+            _ = await (myLeagues, browse)
         } catch {
             errorMessage = error.localizedDescription
         }

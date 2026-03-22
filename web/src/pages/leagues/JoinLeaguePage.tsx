@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { leagueService } from '../../services/leagueService'
 import { GlassCard } from '../../components/ui/GlassCard'
 import { Button } from '../../components/ui/Button'
+import { ErrorBanner } from '../../components/ui/ErrorBanner'
 
 export function JoinLeaguePage() {
   const { token } = useParams<{ token: string }>()
@@ -38,11 +39,7 @@ export function JoinLeaguePage() {
           You've been invited to join a league. Tap below to accept.
         </p>
 
-        {error && (
-          <p role="alert" className="text-xs px-3 py-2 rounded-lg mb-4" style={{ background: 'rgba(248,113,113,0.1)', color: '#f87171' }}>
-            {error}
-          </p>
-        )}
+        {error && <ErrorBanner message={error} size="xs" className="mb-4" />}
 
         <Button type="button" fullWidth loading={submitting} disabled={submitting} onClick={handleJoin}>
           Join League
